@@ -22,7 +22,7 @@ export default function Chat() {
  const [messages, setMessages] = useState([]);
  const [newMessage, setNewMessage] = useState('');
  const [nickname, setNickname] = useState('');
- const [isOpen, setIsOpen] = useState(true);
+ const [isOpen, setIsOpen] = useState(false);
  const chatEndRef = useRef(null);
 
  // 컴포넌트 마운트 시 닉네임 생성

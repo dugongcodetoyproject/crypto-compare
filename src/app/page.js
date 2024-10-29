@@ -24,6 +24,7 @@ export default function Home() {
 
  const [prices, setPrices] = useState([]);
  const [loading, setLoading] = useState(true);
+ const [exchangeLoading, setExchangeLoading] = useState(true);
  const [lastUpdate, setLastUpdate] = useState(null);
  const [exchangeRate, setExchangeRate] = useState(null);
 
@@ -40,29 +41,35 @@ export default function Home() {
  ];
 
  useEffect(() => {
+   const fetchExchangeRate = async () => {
+     try {
+       const response = await fetch('/api/exchange-rate');
+       const data = await response.json();
+       setExchangeRate(data.rate);
+       setExchangeLoading(false);
+     } catch (err) {
+       console.error('Error fetching exchange rate:', err);
+     }
+   };
+
    const fetchPrices = async () => {
      try {
-       const [exchangeResponse, upbitResponse, binanceResponse] = await Promise.all([
-         fetch('/api/exchange-rate'),
+       const [upbitResponse, binanceResponse] = await Promise.all([
          fetch(`https://api.upbit.com/v1/ticker?markets=${COINS.map(coin => `KRW-${coin.symbol}`).join(',')}`),
          fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${JSON.stringify(COINS.map(coin => `${coin.symbol}USDT`))}`)
        ]);
 
-       const [exchangeData, upbitData, binanceData] = await Promise.all([
-         exchangeResponse.json(),
+       const [upbitData, binanceData] = await Promise.all([
          upbitResponse.json(),
          binanceResponse.json()
        ]);
-
-       const usdKrwRate = exchangeData.rate;
-       setExchangeRate(usdKrwRate);
 
        const combinedData = COINS.map(coin => {
          const upbitItem = upbitData.find(item => item.market === `KRW-${coin.symbol}`);
          const binanceItem = binanceData.find(item => item.symbol === `${coin.symbol}USDT`);
          
          const binancePrice = parseFloat(binanceItem?.price || 0);
-         const binanceKrwPrice = Math.floor(binancePrice * usdKrwRate);
+         const binanceKrwPrice = Math.floor(binancePrice * exchangeRate);
          const upbitPrice = upbitItem?.trade_price || 0;
          
          const priceDifference = upbitPrice - binanceKrwPrice;
@@ -74,7 +81,7 @@ export default function Home() {
            binancePrice: binancePrice.toFixed(binancePrice < 1 ? 4 : 2),
            binanceKrwPrice: binanceKrwPrice.toLocaleString(),
            upbitPrice: upbitPrice.toLocaleString(),
-           upbitPriceUsd: (upbitPrice / usdKrwRate).toFixed(2),
+           upbitPriceUsd: (upbitPrice / exchangeRate).toFixed(2),
            change: (upbitItem?.change_rate * 100).toFixed(2),
            volume: Math.floor((upbitItem?.acc_trade_price_24h || 0) / 100000000),
            premium,
@@ -90,19 +97,32 @@ export default function Home() {
      }
    };
 
-   fetchPrices();
+   fetchExchangeRate(); // First load exchange rate independently
+   fetchPrices(); // Then load prices
+
    const interval = setInterval(fetchPrices, 10000); // 10초마다 업데이트
    return () => clearInterval(interval);
- }, []);
+ }, [exchangeRate]);
 
- return isMobile ? (
-   <MobileView prices={prices} loading={loading} lastUpdate={lastUpdate} exchangeRate={exchangeRate} />
- ) : (
-   <PCView prices={prices} loading={loading} lastUpdate={lastUpdate} exchangeRate={exchangeRate} />
+ return (
+   <main className="min-h-screen p-2 bg-gray-50">
+     {loading || exchangeLoading ? (
+       <p className="text-center py-4">데이터 로딩 중...</p>
+     ) : (
+       <>
+         {isMobile ? (
+           <MobileView prices={prices} lastUpdate={lastUpdate} exchangeRate={exchangeRate} />
+         ) : (
+           <PCView prices={prices} lastUpdate={lastUpdate} exchangeRate={exchangeRate} />
+         )}
+         <Chat />
+       </>
+     )}
+   </main>
  );
 }
 
-function MobileView({ prices, loading, lastUpdate, exchangeRate }) {
+function MobileView({ prices, lastUpdate, exchangeRate }) {
  return (
    <main className="min-h-screen p-2 bg-gray-50">
      <div className="max-w-7xl mx-auto">
@@ -126,48 +146,41 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate }) {
              </tr>
            </thead>
            <tbody className="bg-white divide-y divide-gray-200">
-             {loading ? (
-               <tr>
-                 <td colSpan="6" className="px-4 py-4 text-center">데이터 로딩중...</td>
+             {prices.map((item) => (
+               <tr key={item.symbol} className="hover:bg-gray-50">
+                 <td className="px-1 py-2 whitespace-nowrap">
+                   <div className="font-medium truncate">{item.symbol}</div>
+                   <div className="text-gray-500 truncate">{item.korName}</div>
+                 </td>
+                 <td className="px-1 py-2 whitespace-nowrap text-right">
+                   ${item.binancePrice}
+                 </td>
+                 <td className="px-1 py-2 whitespace-nowrap text-right">
+                   ₩{item.upbitPrice}
+                 </td>
+                 <td className={`px-1 py-2 whitespace-nowrap text-right ${
+                   parseFloat(item.change) >= 0 ? 'text-green-500' : 'text-red-500'
+                 }`}>
+                   {parseFloat(item.change) >= 0 ? '+' : ''}{item.change}%
+                 </td>
+                 <td className="px-1 py-2 whitespace-nowrap text-right">
+                   {item.volume}
+                 </td>
+                 <td className="px-1 py-2 whitespace-nowrap text-right">
+                   <div className="text-blue-500">{item.premium}%</div>
+                   <div className="text-blue-500">₩{item.priceDifference}</div>
+                 </td>
                </tr>
-             ) : (
-               prices.map((item) => (
-                 <tr key={item.symbol} className="hover:bg-gray-50">
-                   <td className="px-1 py-2 whitespace-nowrap">
-                     <div className="font-medium truncate">{item.symbol}</div>
-                     <div className="text-gray-500 truncate">{item.korName}</div>
-                   </td>
-                   <td className="px-1 py-2 whitespace-nowrap text-right">
-                     ${item.binancePrice}
-                   </td>
-                   <td className="px-1 py-2 whitespace-nowrap text-right">
-                     ₩{item.upbitPrice}
-                   </td>
-                   <td className={`px-1 py-2 whitespace-nowrap text-right ${
-                     parseFloat(item.change) >= 0 ? 'text-green-500' : 'text-red-500'
-                   }`}>
-                     {parseFloat(item.change) >= 0 ? '+' : ''}{item.change}%
-                   </td>
-                   <td className="px-1 py-2 whitespace-nowrap text-right">
-                     {item.volume}
-                   </td>
-                   <td className="px-1 py-2 whitespace-nowrap text-right">
-                     <div className="text-blue-500">{item.premium}%</div>
-                     <div className="text-blue-500">₩{item.priceDifference}</div>
-                   </td>
-                 </tr>
-               ))
-             )}
+             ))}
            </tbody>
          </table>
        </div>
      </div>
-     <Chat />
    </main>
  );
 }
 
-function PCView({ prices, loading, lastUpdate, exchangeRate }) {
+function PCView({ prices, lastUpdate, exchangeRate }) {
  return (
    <main className="min-h-screen p-4 bg-gray-50">
      <div className="max-w-7xl mx-auto">
@@ -176,72 +189,43 @@ function PCView({ prices, loading, lastUpdate, exchangeRate }) {
            <h1 className="text-2xl font-bold text-gray-900">실시간 김치프리미엄</h1>
            <p className="text-sm text-gray-500">현재 환율: {exchangeRate?.toFixed(2)}원/USD</p>
          </div>
-         <div className="flex items-center space-x-4">
-           <div className="text-sm text-gray-500">
-             마지막 업데이트: {lastUpdate}
-           </div>
-         </div>
+         <div className="text-sm text-gray-500">마지막 업데이트: {lastUpdate}</div>
        </div>
        <div className="bg-white rounded-lg shadow overflow-hidden">
-         <div className="overflow-x-auto">
-           <table className="min-w-full">
-             <thead className="bg-gray-50">
-               <tr>
-                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">코인</th>
-                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Binance($)</th>
-                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Upbit(₩)</th>
-                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">등락(%)</th>
-                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">거래량(억)</th>
-                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">김치프리미엄</th>
+         <table className="min-w-full">
+           <thead className="bg-gray-50">
+             <tr>
+               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">코인</th>
+               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Binance($)</th>
+               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Upbit(₩)</th>
+               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">등락(%)</th>
+               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">거래량(억)</th>
+               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">김치프리미엄</th>
+             </tr>
+           </thead>
+           <tbody className="bg-white divide-y divide-gray-200">
+             {prices.map((item) => (
+               <tr key={item.symbol} className="hover:bg-gray-50">
+                 <td className="px-6 py-4 whitespace-nowrap">
+                   <div className="font-medium">{item.symbol}</div>
+                   <div className="text-sm text-gray-500">{item.korName}</div>
+                 </td>
+                 <td className="px-6 py-4 whitespace-nowrap text-right">${item.binancePrice}</td>
+                 <td className="px-6 py-4 whitespace-nowrap text-right">₩{item.upbitPrice}</td>
+                 <td className={`px-6 py-4 whitespace-nowrap text-right ${
+                   parseFloat(item.change) >= 0 ? 'text-green-500' : 'text-red-500'
+                 }`}>
+                   {parseFloat(item.change) >= 0 ? '+' : ''}{item.change}%
+                 </td>
+                 <td className="px-6 py-4 whitespace-nowrap text-right">{item.volume}</td>
+                 <td className="px-6 py-4 whitespace-nowrap text-right">
+                   <div className="text-blue-500">{item.premium}%</div>
+                   <div className="text-sm text-blue-500">₩{item.priceDifference}</div>
+                 </td>
                </tr>
-             </thead>
-             <tbody className="bg-white divide-y divide-gray-200">
-               {loading ? (
-                 <tr>
-                   <td colSpan="6" className="px-6 py-4 text-center">데이터 로딩중...</td>
-                 </tr>
-               ) : (
-                 prices.map((item) => (
-                   <tr key={item.symbol} className="hover:bg-gray-50">
-                     <td className="px-6 py-4 whitespace-nowrap">
-                       <div className="flex items-center">
-                         <span className="text-yellow-400 mr-2">★</span>
-                         <div>
-                           <div className="font-medium">{item.symbol}</div>
-                           <div className="text-sm text-gray-500">{item.korName}</div>
-                         </div>
-                       </div>
-                     </td>
-                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                       <div>${item.binancePrice}</div>
-                       <div className="text-sm text-gray-500">₩{item.binanceKrwPrice}</div>
-                     </td>
-                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                       <div>₩{item.upbitPrice}</div>
-                       <div className="text-sm text-gray-500">${item.upbitPriceUsd}</div>
-                     </td>
-                     <td className={`px-6 py-4 whitespace-nowrap text-right ${
-                       parseFloat(item.change) >= 0 ? 'text-green-500' : 'text-red-500'
-                     }`}>
-                       {parseFloat(item.change) >= 0 ? '+' : ''}{item.change}%
-                     </td>
-                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                       {item.volume}
-                     </td>
-                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                       <div className="text-blue-500">
-                         {parseFloat(item.premium) > 0 ? '+' : ''}{item.premium}%
-                       </div>
-                       <div className="text-sm text-blue-500">
-                         {parseFloat(item.priceDifference) > 0 ? '+' : ''}₩{item.priceDifference}
-                       </div>
-                     </td>
-                   </tr>
-                 ))
-               )}
-             </tbody>
-           </table>
-         </div>
+             ))}
+           </tbody>
+         </table>
        </div>
      </div>
      <Chat />
