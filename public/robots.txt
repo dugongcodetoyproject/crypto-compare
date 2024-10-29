@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://kimchi-compare.vercel.app/sitemap.xml
