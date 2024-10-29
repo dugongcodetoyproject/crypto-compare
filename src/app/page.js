@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import Chat from './components/Chat';
 
-// Custom hook to detect if the viewport is mobile or not
 const useMediaQuery = (width) => {
  const [targetReached, setTargetReached] = useState(false);
 
@@ -43,24 +42,20 @@ export default function Home() {
  useEffect(() => {
    const fetchPrices = async () => {
      try {
-       const exchangeResponse = await fetch('/api/exchange-rate');
-       const exchangeData = await exchangeResponse.json();
+       const [exchangeResponse, upbitResponse, binanceResponse] = await Promise.all([
+         fetch('/api/exchange-rate'),
+         fetch(`https://api.upbit.com/v1/ticker?markets=${COINS.map(coin => `KRW-${coin.symbol}`).join(',')}`),
+         fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${JSON.stringify(COINS.map(coin => `${coin.symbol}USDT`))}`)
+       ]);
+
+       const [exchangeData, upbitData, binanceData] = await Promise.all([
+         exchangeResponse.json(),
+         upbitResponse.json(),
+         binanceResponse.json()
+       ]);
+
        const usdKrwRate = exchangeData.rate;
        setExchangeRate(usdKrwRate);
-
-       const upbitMarkets = COINS.map(coin => `KRW-${coin.symbol}`).join(',');
-       const upbitResponse = await fetch(
-         `https://api.upbit.com/v1/ticker?markets=${upbitMarkets}`
-       );
-       const upbitData = await upbitResponse.json();
-
-       const binanceSymbols = JSON.stringify(
-         COINS.map(coin => `${coin.symbol}USDT`)
-       );
-       const binanceResponse = await fetch(
-         `https://api.binance.com/api/v3/ticker/price?symbols=${binanceSymbols}`
-       );
-       const binanceData = await binanceResponse.json();
 
        const combinedData = COINS.map(coin => {
          const upbitItem = upbitData.find(item => item.market === `KRW-${coin.symbol}`);
@@ -96,7 +91,7 @@ export default function Home() {
    };
 
    fetchPrices();
-   const interval = setInterval(fetchPrices, 5000);
+   const interval = setInterval(fetchPrices, 10000); // 10초마다 업데이트
    return () => clearInterval(interval);
  }, []);
 
