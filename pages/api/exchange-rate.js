@@ -39,7 +39,7 @@ export default async function handler(req, res) {
     console.error('Exchange rate fetch error:', error);
     // 에러 발생시 기본 환율 사용
     res.status(200).json({
-      rate: 1384,
+      rate: 1,386.70
       timestamp: new Date().getTime(),
       isDefaultRate: true
     });
