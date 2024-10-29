@@ -100,16 +100,12 @@ export default function Home() {
             </div>
           </div>
         </div>
-
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="grid grid-cols-2 gap-4 p-4 border-b">
             <div className="flex items-center">
-              <span className="text-lg font-semibold">Upbit</span>
-              <span className="text-sm text-gray-500 ml-2">기준거래소</span>
             </div>
             <div className="flex items-center">
-              <span className="text-lg font-semibold">Binance</span>
-              <span className="text-sm text-gray-500 ml-2">비교거래소</span>
+         
             </div>
           </div>
 
