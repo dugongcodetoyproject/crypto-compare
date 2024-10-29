@@ -80,27 +80,25 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen p-2 sm:p-4 bg-gray-50">
+    <main className="min-h-screen p-2 bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-4 flex justify-between items-center">
+        <div className="mb-2 flex justify-between items-center">
           <div>
-            <h1 className="text-lg sm:text-2xl font-bold text-gray-900">실시간 김치프리미엄</h1>
-            <p className="text-xs sm:text-sm text-gray-500">현재 환율: {exchangeRate?.toFixed(2)}원/USD</p>
+            <h1 className="text-lg font-bold text-gray-900">실시간 김치프리미엄</h1>
+            <p className="text-xs text-gray-500">환율: {exchangeRate?.toFixed(2)}원/USD</p>
           </div>
-          <div className="text-xs text-gray-500">
-            마지막 업데이트: {lastUpdate}
-          </div>
+          <div className="text-xs text-gray-500">업데이트: {lastUpdate}</div>
         </div>
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full text-xs sm:text-sm">
+          <table className="min-w-full text-[10px]">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-500 uppercase">코인</th>
-                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500 uppercase">Binance($)</th>
-                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500 uppercase">Upbit(₩)</th>
-                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500 uppercase">등락(%)</th>
-                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500 uppercase">거래량(억)</th>
-                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500 uppercase">김치프리미엄</th>
+                <th className="px-1 py-2 text-left font-medium text-gray-500 whitespace-nowrap">코인</th>
+                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">Binance($)</th>
+                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">Upbit(₩)</th>
+                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">등락(%)</th>
+                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">거래량(억)</th>
+                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">김치프리미엄</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -111,27 +109,27 @@ export default function Home() {
               ) : (
                 prices.map((item) => (
                   <tr key={item.symbol} className="hover:bg-gray-50">
-                    <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
+                    <td className="px-1 py-2 whitespace-nowrap">
                       <div className="font-medium truncate">{item.symbol}</div>
                       <div className="text-gray-500 truncate">{item.korName}</div>
                     </td>
-                    <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-right">
+                    <td className="px-1 py-2 whitespace-nowrap text-right">
                       ${item.binancePrice}
                     </td>
-                    <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-right">
+                    <td className="px-1 py-2 whitespace-nowrap text-right">
                       ₩{item.upbitPrice}
                     </td>
-                    <td className={`px-2 sm:px-4 py-2 whitespace-nowrap text-right ${
+                    <td className={`px-1 py-2 whitespace-nowrap text-right ${
                       parseFloat(item.change) >= 0 ? 'text-green-500' : 'text-red-500'
                     }`}>
                       {parseFloat(item.change) >= 0 ? '+' : ''}{item.change}%
                     </td>
-                    <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-right">
+                    <td className="px-1 py-2 whitespace-nowrap text-right">
                       {item.volume}
                     </td>
-                    <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-right">
+                    <td className="px-1 py-2 whitespace-nowrap text-right">
                       <div className="text-blue-500">{item.premium}%</div>
-                      <div className="text-xs text-blue-500">₩{item.priceDifference}</div>
+                      <div className="text-blue-500">₩{item.priceDifference}</div>
                     </td>
                   </tr>
                 ))
