@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState, useEffect } from 'react';
 import Chat from './components/Chat';
 
@@ -26,6 +27,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const exchangeRate = 1378.2;
+  const [chatVisible, setChatVisible] = useState(false);
 
   const COINS = [
     { symbol: 'BTC', korName: '비트코인' },
@@ -56,11 +58,6 @@ export default function Home() {
           const upbitItem = upbitData.find(item => item.market === `KRW-${coin.symbol}`);
           const binanceItem = binanceData.find(item => item.symbol === `${coin.symbol}USDT`);
 
-          console.log(`${coin.symbol} 상세 데이터:`, {
-            change_rate: upbitItem?.change_rate,
-            change: upbitItem?.change,
-            change_price: upbitItem?.change_price,
-          });
           const binancePrice = parseFloat(binanceItem?.price || 0);
           const binanceKrwPrice = Math.floor(binancePrice * exchangeRate);
           const upbitPrice = upbitItem?.trade_price || 0;
@@ -96,13 +93,25 @@ export default function Home() {
   }, []);
 
   return isMobile ? (
-    <MobileView prices={prices} loading={loading} lastUpdate={lastUpdate} exchangeRate={exchangeRate} />
+    <MobileView
+      prices={prices}
+      loading={loading}
+      lastUpdate={lastUpdate}
+      exchangeRate={exchangeRate}
+      chatVisible={chatVisible}
+      setChatVisible={setChatVisible}
+    />
   ) : (
-    <PCView prices={prices} loading={loading} lastUpdate={lastUpdate} exchangeRate={exchangeRate} />
+    <PCView
+      prices={prices}
+      loading={loading}
+      lastUpdate={lastUpdate}
+      exchangeRate={exchangeRate}
+    />
   );
 }
 
-function MobileView({ prices, loading, lastUpdate, exchangeRate }) {
+function MobileView({ prices, loading, lastUpdate, exchangeRate, chatVisible, setChatVisible }) {
   return (
     <main className="min-h-screen p-2 bg-gray-50">
       <div className="max-w-7xl mx-auto">
@@ -112,58 +121,70 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate }) {
             <p className="text-xs text-gray-500">환율: {exchangeRate.toFixed(2)}원/USD</p>
           </div>
           <div className="text-xs text-gray-500">업데이트: {lastUpdate}</div>
+          <button
+            onClick={() => setChatVisible(!chatVisible)}
+            className="ml-4 px-2 py-1 text-xs text-white bg-blue-500 rounded"
+          >
+            {chatVisible ? '채팅 닫기' : '채팅 열기'}
+          </button>
         </div>
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full text-[10px]">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-1 py-2 text-left font-medium text-gray-500 whitespace-nowrap">코인</th>
-                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">Binance($)</th>
-                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">Upbit(₩)</th>
-                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">등락(%)</th>
-                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">거래량(억)</th>
-                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">김치프리미엄</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
+
+        {!chatVisible ? (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="min-w-full text-[10px]">
+              <thead className="bg-gray-50">
                 <tr>
-                  <td colSpan="6" className="px-4 py-4 text-center">데이터 로딩중...</td>
+                  <th className="px-1 py-2 text-left font-medium text-gray-500 whitespace-nowrap">코인</th>
+                  <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">Binance($)</th>
+                  <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">Upbit(₩)</th>
+                  <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">등락(%)</th>
+                  <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">거래량(억)</th>
+                  <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">김치프리미엄</th>
                 </tr>
-              ) : (
-                prices.map((item) => (
-                  <tr key={item.symbol} className="hover:bg-gray-50">
-                    <td className="px-1 py-2 whitespace-nowrap">
-                      <div className="font-medium truncate">{item.symbol}</div>
-                      <div className="text-gray-500 truncate">{item.korName}</div>
-                    </td>
-                    <td className="px-1 py-2 whitespace-nowrap text-right">
-                      ${item.binancePrice}
-                    </td>
-                    <td className="px-1 py-2 whitespace-nowrap text-right">
-                      ₩{item.upbitPrice}
-                    </td>
-                    <td className={`px-1 py-2 whitespace-nowrap text-right ${
-                      parseFloat(item.change) >= 0 ? 'text-green-500' : 'text-red-500'
-                    }`}>
-                      {item.change}%
-                    </td>
-                    <td className="px-1 py-2 whitespace-nowrap text-right">
-                      {item.volume}
-                    </td>
-                    <td className="px-1 py-2 whitespace-nowrap text-right">
-                      <div className="text-blue-500">{item.premium}%</div>
-                      <div className="text-blue-500">₩{item.priceDifference}</div>
-                    </td>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="px-4 py-4 text-center">데이터 로딩중...</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-4">
-          <Chat />
-        </div>
+                ) : (
+                  prices.map((item) => (
+                    <tr key={item.symbol} className="hover:bg-gray-50">
+                      <td className="px-1 py-2 whitespace-nowrap">
+                        <div className="font-medium truncate">{item.symbol}</div>
+                        <div className="text-gray-500 truncate">{item.korName}</div>
+                      </td>
+                      <td className="px-1 py-2 whitespace-nowrap text-right">
+                        ${item.binancePrice}
+                      </td>
+                      <td className="px-1 py-2 whitespace-nowrap text-right">
+                        ₩{item.upbitPrice}
+                      </td>
+                      <td className={`px-1 py-2 whitespace-nowrap text-right ${
+                        parseFloat(item.change) >= 0 ? 'text-green-500' : 'text-red-500'
+                      }`}>
+                        {item.change}%
+                      </td>
+                      <td className="px-1 py-2 whitespace-nowrap text-right">
+                        {item.volume}
+                      </td>
+                      <td className="px-1 py-2 whitespace-nowrap text-right">
+                        <div className="text-blue-500">{item.premium}%</div>
+                        <div className="text-blue-500">₩{item.priceDifference}</div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="mt-4">
+            <div className="bg-white rounded-lg shadow p-2" style={{ height: '300px', overflowY: 'auto' }}>
+              <Chat />
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
