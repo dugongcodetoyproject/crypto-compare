@@ -20,12 +20,12 @@ const useMediaQuery = (width) => {
 };
 
 export default function Home() {
- const isMobile = useMediaQuery(768); // Detect if the screen width is less than 768px (Mobile)
+ const isMobile = useMediaQuery(768); 
 
  const [prices, setPrices] = useState([]);
  const [loading, setLoading] = useState(true);
  const [lastUpdate, setLastUpdate] = useState(null);
- const exchangeRate = 1386.70; // 환율을 상수로 설정
+ const exchangeRate = 1378.2; 
 
  const COINS = [
    { symbol: 'BTC', korName: '비트코인' },
@@ -52,30 +52,35 @@ export default function Home() {
          binanceResponse.json()
        ]);
 
-       const combinedData = COINS.map(coin => {
-         const upbitItem = upbitData.find(item => item.market === `KRW-${coin.symbol}`);
-         const binanceItem = binanceData.find(item => item.symbol === `${coin.symbol}USDT`);
-         
-         const binancePrice = parseFloat(binanceItem?.price || 0);
-         const binanceKrwPrice = Math.floor(binancePrice * exchangeRate);
-         const upbitPrice = upbitItem?.trade_price || 0;
-         
-         const priceDifference = upbitPrice - binanceKrwPrice;
-         const premium = ((priceDifference / binanceKrwPrice) * 100).toFixed(2);
-         
-         return {
-           symbol: coin.symbol,
-           korName: coin.korName,
-           binancePrice: binancePrice.toFixed(binancePrice < 1 ? 4 : 2),
-           binanceKrwPrice: binanceKrwPrice.toLocaleString(),
-           upbitPrice: upbitPrice.toLocaleString(),
-           upbitPriceUsd: (upbitPrice / exchangeRate).toFixed(2),
-           change: (upbitItem?.change_rate * 100).toFixed(2),
-           volume: Math.floor((upbitItem?.acc_trade_price_24h || 0) / 100000000),
-           premium,
-           priceDifference: priceDifference.toLocaleString(),
-         };
-       });
+const combinedData = COINS.map(coin => {
+  const upbitItem = upbitData.find(item => item.market === `KRW-${coin.symbol}`);
+  const binanceItem = binanceData.find(item => item.symbol === `${coin.symbol}USDT`);
+  
+  console.log(`${coin.symbol} 상세 데이터:`, {
+    change_rate: upbitItem?.change_rate,
+    change: upbitItem?.change,
+    change_price: upbitItem?.change_price,
+  });
+  const binancePrice = parseFloat(binanceItem?.price || 0);
+  const binanceKrwPrice = Math.floor(binancePrice * exchangeRate);
+  const upbitPrice = upbitItem?.trade_price || 0;
+  
+  const priceDifference = upbitPrice - binanceKrwPrice;
+  const premium = ((priceDifference / binanceKrwPrice) * 100).toFixed(2);
+  
+  return {
+    symbol: coin.symbol,
+    korName: coin.korName,
+    binancePrice: binancePrice.toFixed(binancePrice < 1 ? 4 : 2),
+    binanceKrwPrice: binanceKrwPrice.toLocaleString(),
+    upbitPrice: upbitPrice.toLocaleString(),
+    upbitPriceUsd: (upbitPrice / exchangeRate).toFixed(2),
+    change: upbitItem?.change === 'FALL' ? (-1 * (upbitItem.change_rate * 100)).toFixed(2) : (upbitItem.change_rate * 100).toFixed(2),
+    volume: Math.floor((upbitItem?.acc_trade_price_24h || 0) / 100000000),
+    premium,
+    priceDifference: priceDifference.toLocaleString(),
+  };
+});
 
        setPrices(combinedData);
        setLastUpdate(new Date().toLocaleTimeString());
@@ -86,7 +91,7 @@ export default function Home() {
    };
 
    fetchPrices();
-   const interval = setInterval(fetchPrices, 10000); // 10초마다 업데이트
+   const interval = setInterval(fetchPrices, 10000); 
    return () => clearInterval(interval);
  }, []);
 
@@ -141,7 +146,7 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate }) {
                    <td className={`px-1 py-2 whitespace-nowrap text-right ${
                      parseFloat(item.change) >= 0 ? 'text-green-500' : 'text-red-500'
                    }`}>
-                     {parseFloat(item.change) >= 0 ? '+' : ''}{item.change}%
+                     {item.change}%
                    </td>
                    <td className="px-1 py-2 whitespace-nowrap text-right">
                      {item.volume}
@@ -202,7 +207,7 @@ function PCView({ prices, loading, lastUpdate, exchangeRate }) {
                    <td className={`px-6 py-4 whitespace-nowrap text-right ${
                      parseFloat(item.change) >= 0 ? 'text-green-500' : 'text-red-500'
                    }`}>
-                     {parseFloat(item.change) >= 0 ? '+' : ''}{item.change}%
+                     {item.change}%
                    </td>
                    <td className="px-6 py-4 whitespace-nowrap text-right">{item.volume}</td>
                    <td className="px-6 py-4 whitespace-nowrap text-right">
