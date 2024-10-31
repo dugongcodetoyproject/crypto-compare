@@ -32,27 +32,31 @@ export default function Chat() {
     setNickname(newNickname);
   }, []);
 
-  useEffect(() => {
-    if (isOpen && nickname) {
-      const messagesRef = ref(database, 'messages');
-      const unsubscribe = onValue(messagesRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          const messageList = Object.values(data)
-            .sort((a, b) => a.timestamp - b.timestamp)
-            .slice(-50);
-          setMessages(messageList);
-          chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); 
-        }
-      });
+useEffect(() => {
+  if (isOpen && nickname) {
+    const messagesRef = ref(database, 'messages');
+    const unsubscribe = onValue(messagesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // 최근 메시지 10개만 가져오기
+        const messageList = Object.values(data)
+          .sort((a, b) => a.timestamp - b.timestamp)
+          .slice(-10); // 최신 10개만 슬라이스
+        setMessages(messageList);
+      }
+    });
 
-      return () => unsubscribe();
-    }
-  }, [isOpen, nickname]);
+    return () => unsubscribe();
+  }
+}, [isOpen, nickname]);
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+// 추가 스크롤 효과 제거
+useEffect(() => {
+  if (messages.length > 0) {
+    chatEndRef.current?.scrollIntoView({ behavior: 'instant' }); // 부드러운 스크롤 제거
+  }
+}, [messages]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,6 +70,7 @@ export default function Chat() {
         timestamp: Date.now()
       });
       setNewMessage('');
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     } catch (error) {
       console.error('메시지 전송 실패:', error);
     }
@@ -77,55 +82,53 @@ export default function Chat() {
         <>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="mb-2 px-4 py-2 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors"
+            className="mb-2 px-4 py-2 bg-yellow-400 text-black rounded-full shadow-lg hover:bg-yellow-500 transition-colors"
           >
             {isOpen ? '채팅창 닫기' : '실시간 채팅'}
           </button>
 
           {isOpen && (
-            <div className="w-80 bg-white rounded-lg shadow-xl">
-              <div className="p-3 bg-blue-500 text-white rounded-t-lg flex justify-between items-center">
-                <h3 className="font-semibold">실시간 채팅</h3>
+            <div className="w-80 bg-white rounded-lg shadow-xl overflow-hidden">
+              <div className="p-4 bg-yellow-400 text-black rounded-t-lg flex justify-between items-center">
+                <h3 className="font-semibold">김치프리미엄 채팅</h3>
                 <span className="text-sm">({nickname})</span>
               </div>
 
-              <div className="h-96 overflow-y-auto p-4 bg-gray-50">
+              <div className="h-96 overflow-y-auto p-4 bg-gray-100">
                 {messages.map((msg, index) => (
                   <div
                     key={index}
-                    className={`mb-2 ${msg.nickname === nickname ? 'text-right' : ''}`}
+                    className={`mb-3 flex ${msg.nickname === nickname ? 'justify-end' : ''}`}
                   >
                     <div
-                      className={`inline-block max-w-[80%] px-3 py-2 rounded-lg ${
+                      className={`px-4 py-2 rounded-2xl ${
                         msg.nickname === nickname
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-200 text-gray-800'
+                          ? 'bg-yellow-300 text-black max-w-[80%] rounded-br-none'
+                          : 'bg-white text-gray-800 max-w-[80%] rounded-bl-none'
                       }`}
                     >
-                      <div className="text-xs opacity-75">{msg.nickname}</div>
-                      <div className="break-all">{msg.text}</div>
+                      <div className="text-xs text-gray-500">{msg.nickname}</div>
+                      <div className="break-all text-sm">{msg.text}</div>
                     </div>
                   </div>
                 ))}
                 <div ref={chatEndRef} />
               </div>
 
-              <form onSubmit={handleSubmit} className="p-3 border-t">
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="메시지 입력..."
-                    className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    전송
-                  </button>
-                </div>
+              <form onSubmit={handleSubmit} className="p-4 bg-gray-200 flex space-x-2">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="메시지 입력..."
+                  className="flex-1 px-3 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-yellow-400 text-black rounded-full hover:bg-yellow-500 transition-colors"
+                >
+                  전송
+                </button>
               </form>
             </div>
           )}
@@ -134,4 +137,3 @@ export default function Chat() {
     </div>
   );
 }
-
