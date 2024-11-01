@@ -91,7 +91,7 @@ export default function Home() {
     };
 
     fetchPrices();
-    const interval = setInterval(fetchPrices, 10000);
+    const interval = setInterval(fetchPrices, 1500);
     return () => clearInterval(interval);
   }, []);
 
