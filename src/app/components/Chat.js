@@ -122,13 +122,19 @@ const fakeMessages = [
   { text: "이거 진짜 사야하나?", nickname: "망설이는도지9999" },
 ];
 
+const getRandomInitialMessages = () => {
+  return Array.from({ length: 10 }, () => ({
+    ...fakeMessages[Math.floor(Math.random() * fakeMessages.length)],
+    timestamp: Date.now() - Math.floor(Math.random() * 60000), // 1분 이내의 무작위 시간
+  }));
+};
 
 
 const firebaseApp = initializeApp(firebaseConfig);
 const database = getDatabase(firebaseApp);
 
 export default function Chat() {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(getRandomInitialMessages()); // 초기 메시지 설정
   const [newMessage, setNewMessage] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const chatEndRef = useRef(null);
@@ -136,13 +142,12 @@ export default function Chat() {
   useEffect(() => {
     if (isOpen) {
       const interval = setInterval(() => {
-        // 무작위 메시지 선택
         const randomMessage = {
           ...fakeMessages[Math.floor(Math.random() * fakeMessages.length)],
           timestamp: Date.now(),
         };
         setMessages((prevMessages) => [...prevMessages, randomMessage].slice(-10)); // 최신 10개 유지
-      }, 5000); // 메시지가 나오는 속도 (현재 5초)
+      }, 15000); // 메시지가 나오는 속도 설정
 
       return () => clearInterval(interval); // 채팅창이 닫힐 때 정리
     }
@@ -168,7 +173,7 @@ export default function Chat() {
       setMessages((prevMessages) => [
         ...prevMessages,
         { text: newMessage, nickname: "사용자", timestamp: Date.now() }
-      ].slice(-10));
+      ].slice(-10)); // 최신 10개 유지
       setNewMessage('');
     } catch (error) {
       console.error('메시지 전송 실패:', error);
