@@ -27,7 +27,7 @@ export default function Home() {
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const exchangeRate = 1385;
+  const exchangeRate = 1399;
 
   const COINS = [
     { symbol: 'BTC', korName: '비트코인' },
