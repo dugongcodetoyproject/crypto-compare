@@ -32,6 +32,7 @@ export default function Home() {
   const COINS = [
     { symbol: 'BTC', korName: '비트코인' },
     { symbol: 'SOL', korName: '솔라나' },  
+    { symbol: 'DOGE', korName: '도지코인' },  
     { symbol: 'ETH', korName: '이더리움' },
     { symbol: 'BCH', korName: '비트코인캐시' },
     { symbol: 'XRP', korName: '리플' },
