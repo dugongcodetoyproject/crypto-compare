@@ -147,8 +147,23 @@ function PCView({ prices, loading, lastUpdate, exchangeRate, coins }) {
         <div className="flex-1">
           <div className="mb-6 flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">실시간 김치프리미엄</h1>
-              <p className="text-sm text-gray-500">현재 환율: {exchangeRate ? `${exchangeRate.toFixed(2)}원/USD` : '불러오는 중...'}</p>
+            {/* <h1 className="text-lg font-bold text-gray-900 mb-10">실시간 김치프리미엄 <img src="/icons/binace-pee2.png" className="inline ml-1" style={{ width: '400px', height: '70px' }} /></h1> */}
+            <h1 className="text-lg font-bold text-gray-900 mb-5">
+  실시간 김치프리미엄
+</h1>
+<a href="https://accounts.binance.com/register?ref=X4CHQFBV" target="_blank" rel="noopener noreferrer">
+  <img 
+    src="/icons/binace-pee2.png" 
+    className="block mx-auto mt-4 mb-5" 
+    style={{ width: '400px', height: '70px' }} 
+    alt="Binance"
+  />
+</a>
+
+
+
+              {/* <h1 className="text-2xl font-bold text-gray-900">실시간 김치프리미엄</h1> */}
+              <p className="text-sm text-gray-500 ">현재 환율: {exchangeRate ? `${exchangeRate.toFixed(2)}원/USD` : '불러오는 중...'}</p>
             </div>
             <div className="text-sm text-gray-500">마지막 업데이트: {lastUpdate}</div>
           </div>
