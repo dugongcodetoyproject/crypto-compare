@@ -146,8 +146,7 @@ function PCView({ prices, loading, lastUpdate, exchangeRate, coins }) {
         <div className="flex-1">
           <div className="mb-6 flex justify-between items-center">
             <div>
-            <h1 className="text-lg font-bold text-gray-900">실시간 김치프리미엄 <img src="/icons/2.webp" alt="김치프리미엄 아이콘" className="inline ml-1 w-10 h-10 rounded-full" /></h1>
-
+              <h1 className="text-2xl font-bold text-gray-900">실시간 김치프리미엄</h1>
               <p className="text-sm text-gray-500">현재 환율: {exchangeRate ? `${exchangeRate.toFixed(2)}원/USD` : '불러오는 중...'}</p>
             </div>
             <div className="text-sm text-gray-500">마지막 업데이트: {lastUpdate}</div>
@@ -214,7 +213,7 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate, coins }) {
       <div className="max-w-7xl mx-auto">
         <div className="mb-2 flex justify-between items-center">
           <div>
-          <h1 className="text-lg font-bold text-gray-900">실시간 김치프리미엄 <img src="/icons/2.webp" alt="김치프리미엄 아이콘" className="inline ml-1 w-10 h-10 rounded-full" /></h1>
+            <h1 className="text-lg font-bold text-gray-900">실시간 김치프리미엄</h1>
             <p className="text-xs text-gray-500">환율: {exchangeRate ? `${exchangeRate.toFixed(2)}원/USD` : '불러오는 중...'}</p>
           </div>
           <div className="text-xs text-gray-500">업데이트: {lastUpdate}</div>
