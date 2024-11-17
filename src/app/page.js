@@ -153,7 +153,7 @@ function PCView({ prices, loading, lastUpdate, exchangeRate, coins }) {
 </h1>
 <a href="https://accounts.binance.com/register?ref=X4CHQFBV" target="_blank" rel="noopener noreferrer">
   <img 
-    src="/icons/1.webp" 
+    src="/icons/1.webp?v=1" 
     className="block mx-auto mt-4 mb-5" 
     style={{ width: '400px', height: '70px' }} 
     alt="Binance"
@@ -236,7 +236,7 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate, coins }) {
 </h1>
 <a href="https://accounts.binance.com/register?ref=X4CHQFBV" target="_blank" rel="noopener noreferrer">
   <img 
-    src="/icons/1.webp" 
+    src="/icons/1.webp?v=1" 
     className="block mx-auto mt-4 mb-5" 
     style={{ width: '400px', height: '70px' }} 
     alt="Binance"
