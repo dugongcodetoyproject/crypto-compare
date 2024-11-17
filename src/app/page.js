@@ -27,7 +27,7 @@ export default function Home() {
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const exchangeRate = 1396;
+  const [exchangeRate, setExchangeRate] = useState(null);
 
   const COINS = [
     { symbol: 'BTC', korName: '비트코인' },
@@ -43,8 +43,29 @@ export default function Home() {
   ];
 
   useEffect(() => {
+    const fetchExchangeRate = async () => {
+      try {
+        const response = await fetch('/api/exchangeRate'); // 서버에서 환율을 가져오도록 수정
+        const data = await response.json();
+        if (data && data.success) {
+          setExchangeRate(data.rate);
+        } else {
+          console.error('Failed to fetch exchange rate:', data);
+        }
+      } catch (err) {
+        console.error('Error fetching exchange rate:', err);
+      }
+    };
+
+    fetchExchangeRate();
+    const interval = setInterval(fetchExchangeRate, 8 * 60 * 60 * 1000); // 하루에 세 번 갱신
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     const fetchPrices = async () => {
-      setLoading(true); // 로딩 시작
+      if (!exchangeRate) return;
+      setLoading(true);
       try {
         const [upbitResponse, binanceResponse] = await Promise.all([
           fetch(`https://api.upbit.com/v1/ticker?markets=${COINS.map(coin => `KRW-${coin.symbol}`).join(',')}`),
@@ -86,14 +107,14 @@ export default function Home() {
       } catch (err) {
         console.error('Error fetching data:', err);
       } finally {
-        setLoading(false); // 로딩 종료
+        setLoading(false);
       }
     };
 
     fetchPrices();
     const interval = setInterval(fetchPrices, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [exchangeRate]);
 
   return (
     <main className="min-h-screen p-2 bg-gray-50">
@@ -126,7 +147,7 @@ function PCView({ prices, loading, lastUpdate, exchangeRate, coins }) {
           <div className="mb-6 flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">실시간 김치프리미엄</h1>
-              <p className="text-sm text-gray-500">현재 환율: {exchangeRate.toFixed(2)}원/USD</p>
+              <p className="text-sm text-gray-500">현재 환율: {exchangeRate ? `${exchangeRate.toFixed(2)}원/USD` : '불러오는 중...'}</p>
             </div>
             <div className="text-sm text-gray-500">마지막 업데이트: {lastUpdate}</div>
           </div>
@@ -193,7 +214,7 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate, coins }) {
         <div className="mb-2 flex justify-between items-center">
           <div>
             <h1 className="text-lg font-bold text-gray-900">실시간 김치프리미엄</h1>
-            <p className="text-xs text-gray-500">환율: {exchangeRate.toFixed(2)}원/USD</p>
+            <p className="text-xs text-gray-500">환율: {exchangeRate ? `${exchangeRate.toFixed(2)}원/USD` : '불러오는 중...'}</p>
           </div>
           <div className="text-xs text-gray-500">업데이트: {lastUpdate}</div>
         </div>

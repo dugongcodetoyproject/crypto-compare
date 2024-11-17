@@ -1,29 +1,38 @@
+// pages/api/exchangeRate.js
+
 import axios from 'axios';
-import cheerio from 'cheerio';
 
-const fetchExchangeRates = async (req, res) => {
-  try {
-    const response = await axios.get('https://spot.wooribank.com/pot/Dream?withyou=FXXRT0021', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36'
-      }
-    });
+let cachedExchangeRate = null;
+let lastFetchedTime = null;
 
-    const html = response.data;
-    const $ = cheerio.load(html);
-
-    const exchangeRates = {};
-    $('div.exchange-typea ul tbody tr').each((index, element) => {
-      const currency = $(element).find('td').eq(0).text().trim();
-      const rate = $(element).find('td').eq(1).text().trim();
-      exchangeRates[currency] = rate;
-    });
-
-    res.status(200).json(exchangeRates);
-  } catch (error) {
-    console.error('Error fetching exchange rates:', error.message);
-    res.status(500).json({ error: 'Failed to fetch exchange rates' });
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ message: 'Method not allowed' });
   }
-};
 
-export default fetchExchangeRates;
+  const oneDay = 24 * 60 * 60 * 1000;
+  const now = new Date().getTime();
+
+  if (cachedExchangeRate && lastFetchedTime && now - lastFetchedTime < oneDay) {
+    return res.status(200).json({ success: true, rate: cachedExchangeRate });
+  }
+
+  try {
+    const response = await axios.get('https://api.exchangerate-api.com/v4/latest/USD', {
+      params: {
+        access_key: 'f571b168bbd4609bec4370132229ad22', // 여기에 실제 API 키를 사용하세요.
+        symbols: 'KRW,USD',
+      },
+    });
+
+    const exchangeRate = response.data.rates.KRW;
+
+    cachedExchangeRate = exchangeRate;
+    lastFetchedTime = now;
+
+    res.status(200).json({ success: true, rate: exchangeRate });
+  } catch (error) {
+    console.error('Error fetching exchange rate:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch exchange rate' });
+  }
+}
