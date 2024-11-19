@@ -241,7 +241,7 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate, coins }) {
     <img
       src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fbinace-pee2.png?alt=media&token=0728f69d-1631-4fb7-bf9e-67ef4fd96291"
       alt="김치프리미엄 이미지"
-      className="w-200 h-auto"
+      className="w-400 h-auto"
     />
   </a>
 </h1>

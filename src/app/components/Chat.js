@@ -122,23 +122,39 @@ const fakeMessages = [
   { text: "이거 진짜 사야하나?", nickname: "망설이는도지9999" },
 ];
 
-const getRandomInitialMessages = () => {
-  return Array.from({ length: 10 }, () => ({
-    ...fakeMessages[Math.floor(Math.random() * fakeMessages.length)],
-    timestamp: Date.now() - Math.floor(Math.random() * 60000), // 1분 이내의 무작위 시간
-  }));
-};
 
-
+// Firebase 초기화
 const firebaseApp = initializeApp(firebaseConfig);
 const database = getDatabase(firebaseApp);
 
 export default function Chat() {
-  const [messages, setMessages] = useState(getRandomInitialMessages()); // 초기 메시지 설정
+  const [messages, setMessages] = useState([]); // 전체 메시지 관리
   const [newMessage, setNewMessage] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const chatEndRef = useRef(null);
 
+  // 초기 fakeMessages 가져오기
+  useEffect(() => {
+    const initialMessages = fakeMessages.map(msg => ({
+      ...msg,
+      timestamp: Date.now() - Math.floor(Math.random() * 60000), // 랜덤 시간
+    }));
+    setMessages(initialMessages);
+  }, []);
+
+  // Firebase에서 실시간 메시지 가져오기
+  useEffect(() => {
+    const messagesRef = ref(database, 'messages');
+    onValue(messagesRef, (snapshot) => {
+      const firebaseMessages = [];
+      snapshot.forEach((childSnapshot) => {
+        firebaseMessages.push(childSnapshot.val());
+      });
+      setMessages((prevMessages) => [...prevMessages, ...firebaseMessages].slice(-50)); // 최신 50개 유지
+    });
+  }, []);
+
+  // Fake 메시지 주기적으로 추가
   useEffect(() => {
     if (isOpen) {
       const interval = setInterval(() => {
@@ -146,19 +162,21 @@ export default function Chat() {
           ...fakeMessages[Math.floor(Math.random() * fakeMessages.length)],
           timestamp: Date.now(),
         };
-        setMessages((prevMessages) => [...prevMessages, randomMessage].slice(-10)); // 최신 10개 유지
-      }, 15000); // 메시지가 나오는 속도 설정
+        setMessages((prevMessages) => [...prevMessages, randomMessage].slice(-50)); // 최신 50개 유지
+      }, 15000); // 메시지 생성 주기 (15초)
 
-      return () => clearInterval(interval); // 채팅창이 닫힐 때 정리
+      return () => clearInterval(interval);
     }
   }, [isOpen]);
 
+  // 스크롤 항상 아래로 유지
   useEffect(() => {
     if (messages.length > 0) {
-      chatEndRef.current?.scrollIntoView({ behavior: 'instant' });
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
+  // 새 메시지 전송
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -170,10 +188,6 @@ export default function Chat() {
         nickname: "사용자",
         timestamp: Date.now()
       });
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { text: newMessage, nickname: "사용자", timestamp: Date.now() }
-      ].slice(-10)); // 최신 10개 유지
       setNewMessage('');
     } catch (error) {
       console.error('메시지 전송 실패:', error);
@@ -182,50 +196,48 @@ export default function Chat() {
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="mb-2 px-4 py-2 bg-yellow-400 text-black rounded-full shadow-lg hover:bg-yellow-500 transition-colors"
-        >
-          {isOpen ? '채팅창 닫기' : '실시간 채팅'}
-        </button>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="mb-2 px-4 py-2 bg-yellow-400 text-black rounded-full shadow-lg hover:bg-yellow-500 transition-colors"
+      >
+        {isOpen ? '채팅창 닫기' : '실시간 채팅'}
+      </button>
 
-        {isOpen && (
-          <div className="w-80 bg-white rounded-lg shadow-xl overflow-hidden">
-            <div className="p-4 bg-yellow-400 text-black rounded-t-lg flex justify-between items-center">
-              <h3 className="font-semibold">김치프리미엄 채팅</h3>
-            </div>
-
-            <div className="h-96 overflow-y-auto p-4 bg-gray-100">
-              {messages.map((msg, index) => (
-                <div key={index} className="mb-3 flex justify-start">
-                  <div className="px-4 py-2 rounded-2xl bg-white text-gray-800 max-w-[80%] rounded-bl-none">
-                    <div className="text-xs text-gray-500">{msg.nickname}</div>
-                    <div className="break-all text-sm">{msg.text}</div>
-                  </div>
-                </div>
-              ))}
-              <div ref={chatEndRef} />
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-4 bg-gray-200 flex space-x-2">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="메시지 입력..."
-                className="flex-1 px-3 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-yellow-400 text-black rounded-full hover:bg-yellow-500 transition-colors"
-              >
-                전송
-              </button>
-            </form>
+      {isOpen && (
+        <div className="w-80 bg-white rounded-lg shadow-xl overflow-hidden">
+          <div className="p-4 bg-yellow-400 text-black rounded-t-lg flex justify-between items-center">
+            <h3 className="font-semibold">김치프리미엄 채팅</h3>
           </div>
-        )}
-      </>
+
+          <div className="h-96 overflow-y-auto p-4 bg-gray-100">
+            {messages.map((msg, index) => (
+              <div key={index} className="mb-3 flex justify-start">
+                <div className="px-4 py-2 rounded-2xl bg-white text-gray-800 max-w-[80%] rounded-bl-none">
+                  <div className="text-xs text-gray-500">{msg.nickname}</div>
+                  <div className="break-all text-sm">{msg.text}</div>
+                </div>
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-4 bg-gray-200 flex space-x-2">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="메시지 입력..."
+              className="flex-1 px-3 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 bg-yellow-400 text-black rounded-full hover:bg-yellow-500 transition-colors"
+            >
+              전송
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
