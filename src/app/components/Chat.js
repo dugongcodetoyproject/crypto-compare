@@ -183,9 +183,10 @@ export default function Chat() {
 
     try {
       const messagesRef = ref(database, 'messages');
+      const randomNickname = fakeMessages[Math.floor(Math.random() * fakeMessages.length)].nickname; // 랜덤 닉네임 선택
       await push(messagesRef, {
         text: newMessage,
-        nickname: "사용자",
+        nickname: randomNickname, // 랜덤 닉네임 사용
         timestamp: Date.now()
       });
       setNewMessage('');
