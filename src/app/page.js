@@ -31,8 +31,8 @@ export default function Home() {
 
   const COINS = [
     { symbol: 'BTC', korName: '비트코인' },
-    { symbol: 'SOL', korName: '솔라나' },  
-    { symbol: 'DOGE', korName: '도지코인' },  
+    { symbol: 'SOL', korName: '솔라나' },
+    { symbol: 'DOGE', korName: '도지코인' },
     { symbol: 'ETH', korName: '이더리움' },
     { symbol: 'BCH', korName: '비트코인캐시' },
     { symbol: 'XRP', korName: '리플' },
@@ -147,29 +147,49 @@ function PCView({ prices, loading, lastUpdate, exchangeRate, coins }) {
         <div className="flex-1">
           <div className="mb-6 flex justify-between items-center">
             <div>
-            <h1 className="flex flex-col items-start space-y-4">
-  <a
-    href="https://accounts.binance.com/register?ref=X4CHQFBV" // 이동할 URL을 설정
-    target="_blank"
-    rel="noopener noreferrer"
-    className="ml-4"
-  >
-    <img
-      src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fbinace-pee2.png?alt=media&token=0728f69d-1631-4fb7-bf9e-67ef4fd96291"
-      alt="김치프리미엄 이미지"
-      className="w-200 h-auto"
-    />
-  </a>
-</h1>
+              <h1 className="flex flex-col items-start space-y-4">
+                <a
+                  href="https://accounts.binance.com/register?ref=X4CHQFBV" // 이동할 URL을 설정
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-4"
+                >
+                  <img
+                    src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fbinace-pee2.png?alt=media&token=0728f69d-1631-4fb7-bf9e-67ef4fd96291"
+                    alt="김치프리미엄 이미지"
+                    className="w-200 h-auto"
+                  />
+                </a>
+              </h1>
+              <h1 className="text-2xl font-bold text-gray-900 mt-4">
+                <a
+                  href="https://console.firebase.google.com/u/0/project/innovapic/storage/innovapic.appspot.com/files/~2FInnovapic_my_ai_created_img?hl=ko"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center"
+                >
 
+                  <img
+                    src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fkimchi_icon.webp?alt=media&token=fa23b1a6-413e-4289-bb19-4bdf3f9e4df2"
+                    alt="김치프리미엄 아이콘"
+                    className="w-20 h-20 ml-1 rounded-3xl shadow-md"
 
-              <h1 className="text-2xl font-bold text-gray-900 mt-4">실시간 김치프리미엄</h1>
+                  />
+                  <span className="ml-2">실시간 김치프리미엄</span>
+                </a>
+              </h1>
+              {/* <h1 className="text-2xl font-bold text-gray-900 mt-4">실시간 김치프리미엄</h1> */}
+              {/* <img
+      src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fkimchi_icon.webp?alt=media&token=fa23b1a6-413e-4289-bb19-4bdf3f9e4df2"
+      alt="김치프리미엄 아이콘"
+      className="w-6 h-6"
+    /> */}
               <p className="text-sm text-gray-500">현재 환율: {exchangeRate ? `${exchangeRate.toFixed(2)}원/USD` : '불러오는 중...'}</p>
             </div>
             {/* <div className="text-sm text-gray-500">마지막 업데이트: {lastUpdate}</div> */}
           </div>
           <div className="bg-white rounded-lg shadow overflow-hidden">
-            
+
             <table className="min-w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -196,9 +216,8 @@ function PCView({ prices, loading, lastUpdate, exchangeRate, coins }) {
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         {priceData.upbitPrice ? `₩${priceData.upbitPrice}` : '불러오는 중...'}
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-right ${
-                        parseFloat(priceData.change || 0) >= 0 ? 'text-green-500' : 'text-red-500'
-                      }`}>
+                      <td className={`px-6 py-4 whitespace-nowrap text-right ${parseFloat(priceData.change || 0) >= 0 ? 'text-green-500' : 'text-red-500'
+                        }`}>
                         {priceData.change ? `${priceData.change}%` : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -231,22 +250,39 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate, coins }) {
       <div className="max-w-7xl mx-auto">
         <div className="mb-2 flex justify-between items-center">
           <div>
-          <h1 className="flex flex-col items-start space-y-4">
-  <a
-    href="https://accounts.binance.com/register?ref=X4CHQFBV" // 이동할 URL을 설정
-    target="_blank"
-    rel="noopener noreferrer"
-    className="ml-4"
-  >
-    <img
-      src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fbinace-pee2.png?alt=media&token=0728f69d-1631-4fb7-bf9e-67ef4fd96291"
-      alt="김치프리미엄 이미지"
-      className="w-400 h-auto"
-    />
-  </a>
-</h1>
+            <h1 className="flex flex-col items-start space-y-4">
+              <a
+                href="https://accounts.binance.com/register?ref=X4CHQFBV" // 이동할 URL을 설정
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-4"
+              >
+                <img
+                  src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fbinace-pee2.png?alt=media&token=0728f69d-1631-4fb7-bf9e-67ef4fd96291"
+                  alt="김치프리미엄 이미지"
+                  className="w-400 h-auto"
+                />
+              </a>
+            </h1>
+            <h1 className="text-2xl font-bold text-gray-900 mt-4">
+                <a
+                  href="https://console.firebase.google.com/u/0/project/innovapic/storage/innovapic.appspot.com/files/~2FInnovapic_my_ai_created_img?hl=ko"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center"
+                >
 
-              <h1 className="text-2xl font-bold text-gray-900 mt-4">실시간 김치프리미엄</h1>
+                  <img
+                    src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fkimchi_icon.webp?alt=media&token=fa23b1a6-413e-4289-bb19-4bdf3f9e4df2"
+                    alt="김치프리미엄 아이콘"
+                    className="w-20 h-20 ml-1 rounded-3xl shadow-md"
+
+                  />
+                  <span className="ml-2">실시간 김치프리미엄</span>
+                </a>
+              </h1>
+
+            {/* <h1 className="text-2xl font-bold text-gray-900 mt-4">실시간 김치프리미엄</h1> */}
 
             {/* <h1 className="text-lg font-bold text-gray-900">실시간 김치프리미엄</h1> */}
             <p className="text-xs text-gray-500">환율: {exchangeRate ? `${exchangeRate.toFixed(2)}원/USD` : '불러오는 중...'}</p>
@@ -280,9 +316,8 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate, coins }) {
                     <td className="px-1 py-2 whitespace-nowrap text-right">
                       {priceData.upbitPrice ? `₩${priceData.upbitPrice}` : '불러오는 중...'}
                     </td>
-                    <td className={`px-1 py-2 whitespace-nowrap text-right ${
-                      parseFloat(priceData.change || 0) >= 0 ? 'text-green-500' : 'text-red-500'
-                    }`}>
+                    <td className={`px-1 py-2 whitespace-nowrap text-right ${parseFloat(priceData.change || 0) >= 0 ? 'text-green-500' : 'text-red-500'
+                      }`}>
                       {priceData.change ? `${priceData.change}%` : 'N/A'}
                     </td>
                     <td className="px-1 py-2 whitespace-nowrap text-right">
