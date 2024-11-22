@@ -130,8 +130,15 @@ const database = getDatabase(firebaseApp);
 export default function Chat() {
   const [messages, setMessages] = useState([]); // 전체 메시지 관리
   const [newMessage, setNewMessage] = useState('');
+  const [nickname, setNickname] = useState(''); //
   const [isOpen, setIsOpen] = useState(false);
   const chatEndRef = useRef(null);
+
+    // 닉네임 한 번만 생성
+    useEffect(() => {
+      const initialNickname = fakeMessages[Math.floor(Math.random() * fakeMessages.length)].nickname;
+      setNickname(initialNickname);
+    }, []);
 
   // 초기 fakeMessages 가져오기
   useEffect(() => {
@@ -171,10 +178,12 @@ export default function Chat() {
 
   // 스크롤 항상 아래로 유지
   useEffect(() => {
-    if (messages.length > 0) {
-      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (isOpen) {
+      chatEndRef.current?.scrollIntoView({  });
     }
-  }, [messages]);
+  }, [isOpen, messages]); // 채팅창 열릴 때와 메시지 추가될 때 스크롤 이동
+
+
 
   // 새 메시지 전송
   const handleSubmit = async (e) => {
@@ -183,11 +192,10 @@ export default function Chat() {
 
     try {
       const messagesRef = ref(database, 'messages');
-      const randomNickname = fakeMessages[Math.floor(Math.random() * fakeMessages.length)].nickname; // 랜덤 닉네임 선택
       await push(messagesRef, {
         text: newMessage,
-        nickname: randomNickname, // 랜덤 닉네임 사용
-        timestamp: Date.now()
+        nickname: nickname, // 고정된 닉네임 사용
+        timestamp: Date.now(),
       });
       setNewMessage('');
     } catch (error) {
