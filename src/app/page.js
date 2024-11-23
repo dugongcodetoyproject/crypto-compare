@@ -276,12 +276,10 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate, coins }) {
                     src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fkimchi_icon.webp?alt=media&token=fa23b1a6-413e-4289-bb19-4bdf3f9e4df2"
                     alt="김치프리미엄 아이콘"
                     className="w-20 h-20 ml-1 rounded-3xl shadow-md"
-
                   />
                   <span className="ml-2">실시간 김치프리미엄</span>
                 </a>
               </h1>
-
             {/* <h1 className="text-2xl font-bold text-gray-900 mt-4">실시간 김치프리미엄</h1> */}
 
             {/* <h1 className="text-lg font-bold text-gray-900">실시간 김치프리미엄</h1> */}
