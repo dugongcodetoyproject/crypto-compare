@@ -1,20 +1,8 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  async redirects() {
-    return [
-      {
-        source: "/:path*",
-        has: [
-          {
-            type: "host",
-            value: "kimchi-compare.vercel.app",
-          },
-        ],
-        destination: "https://www.kimpcoin.com/:path*",
-        permanent: true,
-      },
-    ];
+/** @type {import('postcss-load-config').Config} */
+const config = {
+  plugins: {
+    tailwindcss: {},
   },
 };
 
-export default nextConfig;
+export default config;
