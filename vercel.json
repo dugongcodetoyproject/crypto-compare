@@ -1,9 +1,9 @@
 {
   "redirects": [
     {
-      "source": "/(.*)",                // 모든 요청을
-      "destination": "https://kimpcoin.com/$1", // 새 도메인으로 리디렉션
-      "permanent": true                 // 301 리디렉션 설정
+      "source": "/(.*)",
+      "destination": "https://kimpcoin.com/$1",
+      "permanent": true
     }
   ]
 }
