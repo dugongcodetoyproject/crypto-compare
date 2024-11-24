@@ -299,7 +299,7 @@ export default function Chat() {
   // 스크롤 항상 아래로 유지
   useEffect(() => {
     if (isOpen) {
-      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      chatEndRef.current?.scrollIntoView({});
     }
   }, [isOpen, messages]);
 
