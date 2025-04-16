@@ -39,6 +39,7 @@ const useMediaQuery = (width) => {
   return targetReached;
 };
 
+
 const COINS = [
   { symbol: 'BTC', korName: '비트코인' },
   { symbol: 'SOL', korName: '솔라나' },
@@ -75,46 +76,53 @@ export default function Home() {
     }
   }, []);
 
-  const fetchPrices = async () => {
+  const fetchPrices = useCallback(async () => {
+    if (!exchangeRate) return;
+    
     try {
       const [upbitResponse, binanceResponse] = await Promise.all([
-        fetch('https://api.upbit.com/v1/ticker?markets=KRW-BTC,KRW-ETH,KRW-XRP,KRW-DOGE,KRW-SOL'),
-        fetch('https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","ETHUSDT","XRPUSDT","DOGEUSDT","SOLUSDT"]')
+        fetch(`https://api.upbit.com/v1/ticker?markets=${COINS.map(coin => `KRW-${coin.symbol}`).join(',')}`),
+        fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${JSON.stringify(COINS.map(coin => `${coin.symbol}USDT`))}`)
       ]);
 
-      const upbitData = await upbitResponse.json();
-      const binanceData = await binanceResponse.json();
+      const [upbitData, binanceData] = await Promise.all([
+        upbitResponse.json(),
+        binanceResponse.json()
+      ]);
 
-      const exchangeRate = await fetchExchangeRate();
-      const usdToKrw = exchangeRate.USDKRW;
+      const combinedData = COINS.map(coin => {
+        const upbitItem = upbitData.find(item => item.market === `KRW-${coin.symbol}`);
+        const binanceItem = binanceData.find(item => item.symbol === `${coin.symbol}USDT`);
 
-      const coins = ['BTC', 'ETH', 'XRP', 'DOGE', 'SOL'];
-      const newPrices = {};
+        const binancePrice = parseFloat(binanceItem?.price || 0);
+        const binanceKrwPrice = Math.floor(binancePrice * exchangeRate);
+        const upbitPrice = upbitItem?.trade_price || 0;
 
-      coins.forEach((coin, index) => {
-        const upbitPrice = upbitData[index]?.trade_price;
-        const binancePrice = binanceData.find(item => item.symbol === `${coin}USDT`)?.price;
+        const priceDifference = upbitPrice - binanceKrwPrice;
+        const premium = ((priceDifference / binanceKrwPrice) * 100).toFixed(2);
 
-        if (upbitPrice && binancePrice) {
-          const binancePriceInKrw = parseFloat(binancePrice) * usdToKrw;
-          const premium = ((upbitPrice - binancePriceInKrw) / binancePriceInKrw) * 100;
-
-          newPrices[coin] = {
-            upbit: upbitPrice.toLocaleString(),
-            binance: binancePriceInKrw.toLocaleString(),
-            premium: premium.toFixed(2)
-          };
-        }
+        return {
+          symbol: coin.symbol,
+          korName: coin.korName,
+          binancePrice: binancePrice.toFixed(binancePrice < 1 ? 4 : 2),
+          binanceKrwPrice: binanceKrwPrice.toLocaleString(),
+          upbitPrice: upbitPrice.toLocaleString(),
+          upbitPriceUsd: (upbitPrice / exchangeRate).toFixed(2),
+          change: upbitItem?.change === 'FALL' ? (-1 * (upbitItem.change_rate * 100)).toFixed(2) : (upbitItem.change_rate * 100).toFixed(2),
+          volume: Math.floor((upbitItem?.acc_trade_price_24h || 0) / 100000000),
+          premium,
+          priceDifference: priceDifference.toLocaleString()
+        };
       });
 
-      setPrices(newPrices);
-      setLastUpdate(new Date());
-    } catch (error) {
-      console.error('Error fetching prices:', error);
+      setPrices(combinedData);
+      setLastUpdate(new Date().toLocaleTimeString());
+    } catch (err) {
+      console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [exchangeRate]);
 
   useEffect(() => {
     fetchExchangeRate();
@@ -296,21 +304,21 @@ function PCView({ prices, loading, lastUpdate, exchangeRate, activeTab, setActiv
                           <div className="text-xs text-gray-500 dark:text-gray-400">≈ ₩{priceData.binancePrice}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white">
-                          ₩{priceData.upbitPrice}
-                          <div className="text-xs text-gray-500 dark:text-gray-400">≈ ${priceData.upbitPrice}</div>
+                          ₩{priceData.binanceKrwPrice}
+                          <div className="text-xs text-gray-500 dark:text-gray-400">≈ ${priceData.upbitPriceUsd}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className={`text-sm font-semibold flex items-center justify-end ${
-                            parseFloat(priceData.premium) >= 0 
+                            parseFloat(priceData.change) >= 0 
                               ? 'text-green-600 dark:text-green-400' 
                               : 'text-red-600 dark:text-red-400'
                           }`}>
-                            {parseFloat(priceData.premium) >= 0 ? (
+                            {parseFloat(priceData.change) >= 0 ? (
                               <ArrowUpIcon className="w-4 h-4 mr-1" />
                             ) : (
                               <ArrowDownIcon className="w-4 h-4 mr-1" />
                             )}
-                            {Math.abs(parseFloat(priceData.premium))}%
+                            {Math.abs(parseFloat(priceData.change))}%
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white">
@@ -445,20 +453,20 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate, activeTab, setA
                       <div className="text-xs font-medium text-gray-900 dark:text-white">${priceData.binancePrice}</div>
                     </td>
                     <td className="px-2 py-3 whitespace-nowrap text-right">
-                      <div className="text-xs font-medium text-gray-900 dark:text-white">₩{priceData.upbitPrice}</div>
+                      <div className="text-xs font-medium text-gray-900 dark:text-white">₩{priceData.binanceKrwPrice}</div>
                     </td>
                     <td className="px-2 py-3 whitespace-nowrap text-right">
                       <div className={`text-xs font-medium flex items-center justify-end ${
-                        parseFloat(priceData.premium) >= 0 
+                        parseFloat(priceData.change) >= 0 
                           ? 'text-green-600 dark:text-green-400' 
                           : 'text-red-600 dark:text-red-400'
                       }`}>
-                        {parseFloat(priceData.premium) >= 0 ? (
+                        {parseFloat(priceData.change) >= 0 ? (
                           <ArrowUpIcon className="w-4 h-4 mr-1" />
                         ) : (
                           <ArrowDownIcon className="w-4 h-4 mr-1" />
                         )}
-                        {Math.abs(parseFloat(priceData.premium))}%
+                        {Math.abs(parseFloat(priceData.change))}%
                       </div>
                     </td>
                     <td className="px-2 py-3 whitespace-nowrap text-right">
