@@ -71,59 +71,24 @@ export default function Home() {
       if (!exchangeRate) return;
       setLoading(true);
       try {
-        const response = await fetch('/api/prices');
-        if (!response.ok) {
-          throw new Error('API 응답 오류');
-        }
+        const [upbitResponse, binanceResponse] = await Promise.all([
+          fetch(`https://api.upbit.com/v1/ticker?markets=${COINS.map(coin => `KRW-${coin.symbol}`).join(',')}`),
+          fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${JSON.stringify(COINS.map(coin => `${coin.symbol}USDT`))}`)
+        ]);
 
-        const result = await response.json();
-        if (!result.success || !result.data) {
-          throw new Error(result.error || '데이터 가져오기 실패');
-        }
-
-        const { upbit: upbitData, binance: binanceData } = result.data;
+        const [upbitData, binanceData] = await Promise.all([
+          upbitResponse.json(),
+          binanceResponse.json()
+        ]);
 
         const combinedData = COINS.map(coin => {
           const upbitItem = upbitData.find(item => item.market === `KRW-${coin.symbol}`);
           const binanceItem = binanceData.find(item => item.symbol === `${coin.symbol}USDT`);
 
-          if (!upbitItem || !binanceItem) {
-            console.warn(`${coin.symbol}에 대한 데이터를 찾을 수 없습니다.`);
-            return {
-              symbol: coin.symbol,
-              korName: coin.korName,
-              binancePrice: 'N/A',
-              binanceKrwPrice: 'N/A',
-              upbitPrice: 'N/A',
-              upbitPriceUsd: 'N/A',
-              change: 'N/A',
-              volume: 'N/A',
-              premium: 'N/A',
-              priceDifference: 'N/A'
-            };
-          }
-
-          const binancePrice = parseFloat(binanceItem.price);
-          if (isNaN(binancePrice)) {
-            console.warn(`${coin.symbol}의 Binance 가격이 유효하지 않습니다:`, binanceItem.price);
-            return {
-              symbol: coin.symbol,
-              korName: coin.korName,
-              binancePrice: 'Error',
-              binanceKrwPrice: 'Error',
-              upbitPrice: upbitItem.trade_price?.toLocaleString() || 'N/A',
-              upbitPriceUsd: 'Error',
-              change: upbitItem.change === 'FALL' ? 
-                (-1 * (upbitItem.change_rate * 100)).toFixed(2) : 
-                (upbitItem.change_rate * 100).toFixed(2),
-              volume: Math.floor((upbitItem.acc_trade_price_24h || 0) / 100000000),
-              premium: 'Error',
-              priceDifference: 'Error'
-            };
-          }
-
+          const binancePrice = parseFloat(binanceItem?.price || 0);
           const binanceKrwPrice = Math.floor(binancePrice * exchangeRate);
-          const upbitPrice = upbitItem.trade_price;
+          const upbitPrice = upbitItem?.trade_price || 0;
+
           const priceDifference = upbitPrice - binanceKrwPrice;
           const premium = ((priceDifference / binanceKrwPrice) * 100).toFixed(2);
 
@@ -134,26 +99,24 @@ export default function Home() {
             binanceKrwPrice: binanceKrwPrice.toLocaleString(),
             upbitPrice: upbitPrice.toLocaleString(),
             upbitPriceUsd: (upbitPrice / exchangeRate).toFixed(2),
-            change: upbitItem.change === 'FALL' ? 
-              (-1 * (upbitItem.change_rate * 100)).toFixed(2) : 
-              (upbitItem.change_rate * 100).toFixed(2),
-            volume: Math.floor((upbitItem.acc_trade_price_24h || 0) / 100000000),
+            change: upbitItem?.change === 'FALL' ? (-1 * (upbitItem.change_rate * 100)).toFixed(2) : (upbitItem.change_rate * 100).toFixed(2),
+            volume: Math.floor((upbitItem?.acc_trade_price_24h || 0) / 100000000),
             premium,
-            priceDifference: priceDifference.toLocaleString()
+            priceDifference: priceDifference.toLocaleString(),
           };
         });
 
         setPrices(combinedData);
         setLastUpdate(new Date().toLocaleTimeString());
       } catch (err) {
-        console.error('가격 데이터 가져오기 오류:', err);
+        console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPrices();
-    const interval = setInterval(fetchPrices, 3000);
+    const interval = setInterval(fetchPrices, 5000);
     return () => clearInterval(interval);
   }, [exchangeRate]);
 
