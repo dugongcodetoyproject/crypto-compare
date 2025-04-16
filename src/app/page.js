@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -171,26 +170,21 @@ function PCView({ prices, loading, lastUpdate, exchangeRate, coins }) {
                   rel="noopener noreferrer"
                   className="ml-4"
                 >
-                  <img
-                    src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fbinace-pee2.png?alt=media&token=0728f69d-1631-4fb7-bf9e-67ef4fd96291"
-                    alt="김치프리미엄 이미지"
-                    className="w-200 h-auto"
-                  />
+  
                 </a>
               </h1>
               <h1 className="text-2xl font-bold text-gray-900 mt-4">
                 <a
-                  href="https://console.firebase.google.com/u/0/project/innovapic/storage/innovapic.appspot.com/files/~2FInnovapic_my_ai_created_img?hl=ko"
+        
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center"
                 >
 
                   <img
-                    src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fkimchi_icon.webp?alt=media&token=fa23b1a6-413e-4289-bb19-4bdf3f9e4df2"
+                    src="/images/kimchi-icon.png"
                     alt="김치프리미엄 아이콘"
                     className="w-20 h-20 ml-1 rounded-3xl shadow-md"
-
                   />
                   <span className="ml-2">실시간 김치프리미엄</span>
                 </a>
@@ -290,7 +284,7 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate, coins }) {
                 >
 
                   <img
-                    src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fkimchi_icon.webp?alt=media&token=fa23b1a6-413e-4289-bb19-4bdf3f9e4df2"
+                    src="/images/kimchi-icon.png"
                     alt="김치프리미엄 아이콘"
                     className="w-20 h-20 ml-1 rounded-3xl shadow-md"
                   />
