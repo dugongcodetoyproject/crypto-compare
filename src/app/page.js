@@ -76,22 +76,19 @@ export default function Home() {
           throw new Error('API 응답 오류');
         }
 
-        const data = await response.json();
-        if (!data.success) {
-          throw new Error(data.error || '데이터 가져오기 실패');
+        const result = await response.json();
+        if (!result.success || !result.data) {
+          throw new Error(result.error || '데이터 가져오기 실패');
         }
 
-        const { upbit: upbitData, binance: binanceData } = data;
-
-        if (!Array.isArray(upbitData) || !Array.isArray(binanceData)) {
-          throw new Error('잘못된 데이터 형식');
-        }
+        const { upbit: upbitData, binance: binanceData } = result.data;
 
         const combinedData = COINS.map(coin => {
           const upbitItem = upbitData.find(item => item.market === `KRW-${coin.symbol}`);
           const binanceItem = binanceData.find(item => item.symbol === `${coin.symbol}USDT`);
 
           if (!upbitItem || !binanceItem) {
+            console.warn(`${coin.symbol}에 대한 데이터를 찾을 수 없습니다.`);
             return {
               symbol: coin.symbol,
               korName: coin.korName,
@@ -106,10 +103,27 @@ export default function Home() {
             };
           }
 
-          const binancePrice = parseFloat(binanceItem.price || 0);
-          const binanceKrwPrice = Math.floor(binancePrice * exchangeRate);
-          const upbitPrice = upbitItem.trade_price || 0;
+          const binancePrice = parseFloat(binanceItem.price);
+          if (isNaN(binancePrice)) {
+            console.warn(`${coin.symbol}의 Binance 가격이 유효하지 않습니다:`, binanceItem.price);
+            return {
+              symbol: coin.symbol,
+              korName: coin.korName,
+              binancePrice: 'Error',
+              binanceKrwPrice: 'Error',
+              upbitPrice: upbitItem.trade_price?.toLocaleString() || 'N/A',
+              upbitPriceUsd: 'Error',
+              change: upbitItem.change === 'FALL' ? 
+                (-1 * (upbitItem.change_rate * 100)).toFixed(2) : 
+                (upbitItem.change_rate * 100).toFixed(2),
+              volume: Math.floor((upbitItem.acc_trade_price_24h || 0) / 100000000),
+              premium: 'Error',
+              priceDifference: 'Error'
+            };
+          }
 
+          const binanceKrwPrice = Math.floor(binancePrice * exchangeRate);
+          const upbitPrice = upbitItem.trade_price;
           const priceDifference = upbitPrice - binanceKrwPrice;
           const premium = ((priceDifference / binanceKrwPrice) * 100).toFixed(2);
 
@@ -120,10 +134,12 @@ export default function Home() {
             binanceKrwPrice: binanceKrwPrice.toLocaleString(),
             upbitPrice: upbitPrice.toLocaleString(),
             upbitPriceUsd: (upbitPrice / exchangeRate).toFixed(2),
-            change: upbitItem.change === 'FALL' ? (-1 * (upbitItem.change_rate * 100)).toFixed(2) : (upbitItem.change_rate * 100).toFixed(2),
+            change: upbitItem.change === 'FALL' ? 
+              (-1 * (upbitItem.change_rate * 100)).toFixed(2) : 
+              (upbitItem.change_rate * 100).toFixed(2),
             volume: Math.floor((upbitItem.acc_trade_price_24h || 0) / 100000000),
             premium,
-            priceDifference: priceDifference.toLocaleString(),
+            priceDifference: priceDifference.toLocaleString()
           };
         });
 
@@ -131,14 +147,13 @@ export default function Home() {
         setLastUpdate(new Date().toLocaleTimeString());
       } catch (err) {
         console.error('가격 데이터 가져오기 오류:', err);
-        // 에러 발생 시 이전 데이터 유지
       } finally {
         setLoading(false);
       }
     };
 
     fetchPrices();
-    const interval = setInterval(fetchPrices, 3000); // 3초마다 갱신
+    const interval = setInterval(fetchPrices, 3000);
     return () => clearInterval(interval);
   }, [exchangeRate]);
 

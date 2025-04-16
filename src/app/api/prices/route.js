@@ -7,21 +7,16 @@ export async function GET(request) {
       'XRP', 'LINK', 'DOT', 'ADA', 'TRX', 'XLM'
     ];
 
-    const [upbitResponse, binanceResponse] = await Promise.all([
-      fetch(`https://api.upbit.com/v1/ticker?markets=${coins.map(coin => `KRW-${coin}`).join(',')}`, {
-        headers: {
-          'Accept': 'application/json',
-        },
-      }),
-      fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${JSON.stringify(coins.map(coin => `${coin}USDT`))}`, {
-        headers: {
-          'Accept': 'application/json',
-        },
-      })
-    ]);
+    // Upbit API 호출
+    const upbitMarkets = coins.map(coin => `KRW-${coin}`).join(',');
+    const upbitResponse = await fetch(`https://api.upbit.com/v1/ticker?markets=${upbitMarkets}`);
+
+    // Binance API 호출
+    const binanceSymbols = JSON.stringify(coins.map(coin => `${coin}USDT`));
+    const binanceResponse = await fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${binanceSymbols}`);
 
     if (!upbitResponse.ok || !binanceResponse.ok) {
-      throw new Error('Failed to fetch prices');
+      throw new Error('API 요청 실패');
     }
 
     const [upbitData, binanceData] = await Promise.all([
@@ -29,15 +24,27 @@ export async function GET(request) {
       binanceResponse.json()
     ]);
 
+    // 응답 데이터 유효성 검사
+    if (!Array.isArray(upbitData) || !Array.isArray(binanceData)) {
+      throw new Error('잘못된 응답 데이터 형식');
+    }
+
     return NextResponse.json({
       success: true,
-      upbit: upbitData,
-      binance: binanceData
+      data: {
+        upbit: upbitData,
+        binance: binanceData,
+        timestamp: new Date().toISOString()
+      }
     });
+
   } catch (error) {
-    console.error('Price fetch error:', error);
+    console.error('가격 데이터 조회 오류:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { 
+        success: false, 
+        error: error.message || '가격 데이터를 가져오는데 실패했습니다.' 
+      },
       { status: 500 }
     );
   }
