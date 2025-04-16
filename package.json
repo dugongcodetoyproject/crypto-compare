@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm install --legacy-peer-deps && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -13,11 +13,11 @@
     "axios": "^1.7.7",
     "cheerio": "^1.0.0",
     "firebase": "^11.0.1",
-    "lucide-react": "^0.294.0",
+    "lucide-react": "0.263.1",
     "next": "15.0.1",
     "node-fetch": "^3.3.2",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",
