@@ -71,36 +71,17 @@ export default function Home() {
       if (!exchangeRate) return;
       setLoading(true);
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5초 타임아웃
-
-        const [upbitResponse, binanceResponse] = await Promise.all([
-          fetch(`https://api.upbit.com/v1/ticker?markets=${COINS.map(coin => `KRW-${coin.symbol}`).join(',')}`, {
-            signal: controller.signal,
-            headers: {
-              'Accept': 'application/json',
-              'Cache-Control': 'no-cache'
-            }
-          }),
-          fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${JSON.stringify(COINS.map(coin => `${coin.symbol}USDT`))}`, {
-            signal: controller.signal,
-            headers: {
-              'Accept': 'application/json',
-              'Cache-Control': 'no-cache'
-            }
-          })
-        ]);
-
-        clearTimeout(timeoutId);
-
-        if (!upbitResponse.ok || !binanceResponse.ok) {
+        const response = await fetch('/api/prices');
+        if (!response.ok) {
           throw new Error('API 응답 오류');
         }
 
-        const [upbitData, binanceData] = await Promise.all([
-          upbitResponse.json(),
-          binanceResponse.json()
-        ]);
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error(data.error || '데이터 가져오기 실패');
+        }
+
+        const { upbit: upbitData, binance: binanceData } = data;
 
         if (!Array.isArray(upbitData) || !Array.isArray(binanceData)) {
           throw new Error('잘못된 데이터 형식');
