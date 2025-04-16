@@ -47,20 +47,22 @@ export default function Home() {
   useEffect(() => {
     const fetchExchangeRate = async () => {
       try {
-        const response = await fetch('/api/exchangeRate'); // 서버에서 환율을 가져오도록 수정
+        const response = await fetch('/api/exchangeRate', {
+          next: { revalidate: 3600 } // 1시간마다 재검증
+        });
         const data = await response.json();
         if (data && data.success) {
           setExchangeRate(data.rate);
         } else {
-          console.error('Failed to fetch exchange rate:', data);
+          console.error('환율 정보를 가져오는데 실패했습니다:', data);
         }
       } catch (err) {
-        console.error('Error fetching exchange rate:', err);
+        console.error('환율 API 오류:', err);
       }
     };
 
     fetchExchangeRate();
-    const interval = setInterval(fetchExchangeRate, 8 * 60 * 60 * 1000); // 하루에 세 번 갱신
+    const interval = setInterval(fetchExchangeRate, 3600000); // 1시간마다 갱신
     return () => clearInterval(interval);
   }, []);
 
@@ -69,23 +71,63 @@ export default function Home() {
       if (!exchangeRate) return;
       setLoading(true);
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5초 타임아웃
+
         const [upbitResponse, binanceResponse] = await Promise.all([
-          fetch(`https://api.upbit.com/v1/ticker?markets=${COINS.map(coin => `KRW-${coin.symbol}`).join(',')}`),
-          fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${JSON.stringify(COINS.map(coin => `${coin.symbol}USDT`))}`)
+          fetch(`https://api.upbit.com/v1/ticker?markets=${COINS.map(coin => `KRW-${coin.symbol}`).join(',')}`, {
+            signal: controller.signal,
+            headers: {
+              'Accept': 'application/json',
+              'Cache-Control': 'no-cache'
+            }
+          }),
+          fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${JSON.stringify(COINS.map(coin => `${coin.symbol}USDT`))}`, {
+            signal: controller.signal,
+            headers: {
+              'Accept': 'application/json',
+              'Cache-Control': 'no-cache'
+            }
+          })
         ]);
+
+        clearTimeout(timeoutId);
+
+        if (!upbitResponse.ok || !binanceResponse.ok) {
+          throw new Error('API 응답 오류');
+        }
 
         const [upbitData, binanceData] = await Promise.all([
           upbitResponse.json(),
           binanceResponse.json()
         ]);
 
+        if (!Array.isArray(upbitData) || !Array.isArray(binanceData)) {
+          throw new Error('잘못된 데이터 형식');
+        }
+
         const combinedData = COINS.map(coin => {
           const upbitItem = upbitData.find(item => item.market === `KRW-${coin.symbol}`);
           const binanceItem = binanceData.find(item => item.symbol === `${coin.symbol}USDT`);
 
-          const binancePrice = parseFloat(binanceItem?.price || 0);
+          if (!upbitItem || !binanceItem) {
+            return {
+              symbol: coin.symbol,
+              korName: coin.korName,
+              binancePrice: 'N/A',
+              binanceKrwPrice: 'N/A',
+              upbitPrice: 'N/A',
+              upbitPriceUsd: 'N/A',
+              change: 'N/A',
+              volume: 'N/A',
+              premium: 'N/A',
+              priceDifference: 'N/A'
+            };
+          }
+
+          const binancePrice = parseFloat(binanceItem.price || 0);
           const binanceKrwPrice = Math.floor(binancePrice * exchangeRate);
-          const upbitPrice = upbitItem?.trade_price || 0;
+          const upbitPrice = upbitItem.trade_price || 0;
 
           const priceDifference = upbitPrice - binanceKrwPrice;
           const premium = ((priceDifference / binanceKrwPrice) * 100).toFixed(2);
@@ -97,8 +139,8 @@ export default function Home() {
             binanceKrwPrice: binanceKrwPrice.toLocaleString(),
             upbitPrice: upbitPrice.toLocaleString(),
             upbitPriceUsd: (upbitPrice / exchangeRate).toFixed(2),
-            change: upbitItem?.change === 'FALL' ? (-1 * (upbitItem.change_rate * 100)).toFixed(2) : (upbitItem.change_rate * 100).toFixed(2),
-            volume: Math.floor((upbitItem?.acc_trade_price_24h || 0) / 100000000),
+            change: upbitItem.change === 'FALL' ? (-1 * (upbitItem.change_rate * 100)).toFixed(2) : (upbitItem.change_rate * 100).toFixed(2),
+            volume: Math.floor((upbitItem.acc_trade_price_24h || 0) / 100000000),
             premium,
             priceDifference: priceDifference.toLocaleString(),
           };
@@ -107,14 +149,15 @@ export default function Home() {
         setPrices(combinedData);
         setLastUpdate(new Date().toLocaleTimeString());
       } catch (err) {
-        console.error('Error fetching data:', err);
+        console.error('가격 데이터 가져오기 오류:', err);
+        // 에러 발생 시 이전 데이터 유지
       } finally {
         setLoading(false);
       }
     };
 
     fetchPrices();
-    const interval = setInterval(fetchPrices, 5000);
+    const interval = setInterval(fetchPrices, 3000); // 3초마다 갱신
     return () => clearInterval(interval);
   }, [exchangeRate]);
 
