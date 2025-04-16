@@ -64,15 +64,15 @@ export default function Home() {
 
   const fetchExchangeRate = useCallback(async () => {
     try {
-      const response = await fetch('/api/exchangeRate', {
-        next: { revalidate: 3600 }
-      });
-      const data = await response.json();
-      if (data && data.success) {
-        setExchangeRate(data.rate);
+      const response = await fetch('/api/exchangeRate');
+      if (!response.ok) {
+        throw new Error('환율 정보를 가져오는데 실패했습니다.');
       }
-    } catch (err) {
-      console.error('환율 API 오류:', err);
+      const data = await response.json();
+      return data.USDKRW;
+    } catch (error) {
+      console.error('Error fetching exchange rate:', error);
+      return 1300; // 기본 환율값
     }
   }, []);
 
@@ -81,9 +81,21 @@ export default function Home() {
     
     try {
       const [upbitResponse, binanceResponse] = await Promise.all([
-        fetch(`https://api.upbit.com/v1/ticker?markets=${COINS.map(coin => `KRW-${coin.symbol}`).join(',')}`),
-        fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${JSON.stringify(COINS.map(coin => `${coin.symbol}USDT`))}`)
+        fetch('https://api.upbit.com/v1/ticker?markets=KRW-BTC,KRW-ETH,KRW-XRP,KRW-DOGE,KRW-SOL', {
+          headers: {
+            'Accept': 'application/json',
+          },
+        }),
+        fetch('https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","ETHUSDT","XRPUSDT","DOGEUSDT","SOLUSDT"]', {
+          headers: {
+            'Accept': 'application/json',
+          },
+        })
       ]);
+
+      if (!upbitResponse.ok || !binanceResponse.ok) {
+        throw new Error('API 응답이 실패했습니다.');
+      }
 
       const [upbitData, binanceData] = await Promise.all([
         upbitResponse.json(),
