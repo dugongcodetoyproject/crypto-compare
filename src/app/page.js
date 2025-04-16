@@ -81,8 +81,8 @@ export default function Home() {
     
     try {
       const [upbitResponse, binanceResponse] = await Promise.all([
-        fetch('https://api.upbit.com/v1/ticker?markets=KRW-BTC,KRW-ETH,KRW-XRP,KRW-DOGE,KRW-SOL'),
-        fetch('https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","ETHUSDT","XRPUSDT","DOGEUSDT","SOLUSDT"]')
+        fetch(`https://api.upbit.com/v1/ticker?markets=${COINS.map(coin => `KRW-${coin.symbol}`).join(',')}`),
+        fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${JSON.stringify(COINS.map(coin => `${coin.symbol}USDT`))}`)
       ]);
 
       const [upbitData, binanceData] = await Promise.all([
