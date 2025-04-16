@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Chat from './components/Chat';
-import Spinner from './components/Spinner'; // 로딩 스피너 컴포넌트 추가
-import Head from 'next/head'; // Head 컴포넌트 추가
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import Head from 'next/head';
+import { ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
 
 const useMediaQuery = (width) => {
   const [targetReached, setTargetReached] = useState(false);
@@ -22,134 +21,151 @@ const useMediaQuery = (width) => {
   return targetReached;
 };
 
+const COINS = [
+  { symbol: 'BTC', korName: '비트코인' },
+  { symbol: 'SOL', korName: '솔라나' },
+  { symbol: 'DOGE', korName: '도지코인' },
+  { symbol: 'ETH', korName: '이더리움' },
+  { symbol: 'BCH', korName: '비트코인캐시' },
+  { symbol: 'XRP', korName: '리플' },
+  { symbol: 'LINK', korName: '체인링크' },
+  { symbol: 'DOT', korName: '폴카닷' },
+  { symbol: 'ADA', korName: '에이다' },
+  { symbol: 'TRX', korName: '트론' },
+  { symbol: 'XLM', korName: '스텔라루멘' },
+];
+
 export default function Home() {
   const isMobile = useMediaQuery(768);
-
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [exchangeRate, setExchangeRate] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
 
-  const COINS = [
-    { symbol: 'BTC', korName: '비트코인' },
-    { symbol: 'SOL', korName: '솔라나' },
-    { symbol: 'DOGE', korName: '도지코인' },
-    { symbol: 'ETH', korName: '이더리움' },
-    { symbol: 'BCH', korName: '비트코인캐시' },
-    { symbol: 'XRP', korName: '리플' },
-    { symbol: 'LINK', korName: '체인링크' },
-    { symbol: 'DOT', korName: '폴카닷' },
-    { symbol: 'ADA', korName: '에이다' },
-    { symbol: 'TRX', korName: '트론' },
-    { symbol: 'XLM', korName: '스텔라루멘' },
-  ];
-
-  useEffect(() => {
-    const fetchExchangeRate = async () => {
-      try {
-        const response = await fetch('/api/exchangeRate', {
-          next: { revalidate: 3600 } // 1시간마다 재검증
-        });
-        const data = await response.json();
-        if (data && data.success) {
-          setExchangeRate(data.rate);
-        } else {
-          console.error('환율 정보를 가져오는데 실패했습니다:', data);
-        }
-      } catch (err) {
-        console.error('환율 API 오류:', err);
+  const fetchExchangeRate = useCallback(async () => {
+    try {
+      const response = await fetch('/api/exchangeRate', {
+        next: { revalidate: 3600 }
+      });
+      const data = await response.json();
+      if (data && data.success) {
+        setExchangeRate(data.rate);
       }
-    };
-
-    fetchExchangeRate();
-    const interval = setInterval(fetchExchangeRate, 3600000); // 1시간마다 갱신
-    return () => clearInterval(interval);
+    } catch (err) {
+      console.error('환율 API 오류:', err);
+    }
   }, []);
 
-  useEffect(() => {
-    const fetchPrices = async () => {
-      if (!exchangeRate) return;
-      setLoading(true);
-      try {
-        const [upbitResponse, binanceResponse] = await Promise.all([
-          fetch(`https://api.upbit.com/v1/ticker?markets=${COINS.map(coin => `KRW-${coin.symbol}`).join(',')}`),
-          fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${JSON.stringify(COINS.map(coin => `${coin.symbol}USDT`))}`)
-        ]);
+  const fetchPrices = useCallback(async () => {
+    if (!exchangeRate) return;
+    
+    try {
+      const [upbitResponse, binanceResponse] = await Promise.all([
+        fetch(`https://api.upbit.com/v1/ticker?markets=${COINS.map(coin => `KRW-${coin.symbol}`).join(',')}`),
+        fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${JSON.stringify(COINS.map(coin => `${coin.symbol}USDT`))}`)
+      ]);
 
-        const [upbitData, binanceData] = await Promise.all([
-          upbitResponse.json(),
-          binanceResponse.json()
-        ]);
+      const [upbitData, binanceData] = await Promise.all([
+        upbitResponse.json(),
+        binanceResponse.json()
+      ]);
 
-        const combinedData = COINS.map(coin => {
-          const upbitItem = upbitData.find(item => item.market === `KRW-${coin.symbol}`);
-          const binanceItem = binanceData.find(item => item.symbol === `${coin.symbol}USDT`);
+      const combinedData = COINS.map(coin => {
+        const upbitItem = upbitData.find(item => item.market === `KRW-${coin.symbol}`);
+        const binanceItem = binanceData.find(item => item.symbol === `${coin.symbol}USDT`);
 
-          const binancePrice = parseFloat(binanceItem?.price || 0);
-          const binanceKrwPrice = Math.floor(binancePrice * exchangeRate);
-          const upbitPrice = upbitItem?.trade_price || 0;
+        const binancePrice = parseFloat(binanceItem?.price || 0);
+        const binanceKrwPrice = Math.floor(binancePrice * exchangeRate);
+        const upbitPrice = upbitItem?.trade_price || 0;
 
-          const priceDifference = upbitPrice - binanceKrwPrice;
-          const premium = ((priceDifference / binanceKrwPrice) * 100).toFixed(2);
+        const priceDifference = upbitPrice - binanceKrwPrice;
+        const premium = ((priceDifference / binanceKrwPrice) * 100).toFixed(2);
 
-          return {
-            symbol: coin.symbol,
-            korName: coin.korName,
-            binancePrice: binancePrice.toFixed(binancePrice < 1 ? 4 : 2),
-            binanceKrwPrice: binanceKrwPrice.toLocaleString(),
-            upbitPrice: upbitPrice.toLocaleString(),
-            upbitPriceUsd: (upbitPrice / exchangeRate).toFixed(2),
-            change: upbitItem?.change === 'FALL' ? (-1 * (upbitItem.change_rate * 100)).toFixed(2) : (upbitItem.change_rate * 100).toFixed(2),
-            volume: Math.floor((upbitItem?.acc_trade_price_24h || 0) / 100000000),
-            premium,
-            priceDifference: priceDifference.toLocaleString(),
-          };
-        });
+        return {
+          symbol: coin.symbol,
+          korName: coin.korName,
+          binancePrice: binancePrice.toFixed(binancePrice < 1 ? 4 : 2),
+          binanceKrwPrice: binanceKrwPrice.toLocaleString(),
+          upbitPrice: upbitPrice.toLocaleString(),
+          upbitPriceUsd: (upbitPrice / exchangeRate).toFixed(2),
+          change: upbitItem?.change === 'FALL' ? (-1 * (upbitItem.change_rate * 100)).toFixed(2) : (upbitItem.change_rate * 100).toFixed(2),
+          volume: Math.floor((upbitItem?.acc_trade_price_24h || 0) / 100000000),
+          premium,
+          priceDifference: priceDifference.toLocaleString(),
+        };
+      });
 
-        setPrices(combinedData);
-        setLastUpdate(new Date().toLocaleTimeString());
-      } catch (err) {
-        console.error('Error fetching data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPrices();
-    const interval = setInterval(fetchPrices, 5000);
-    return () => clearInterval(interval);
+      setPrices(combinedData);
+      setLastUpdate(new Date().toLocaleTimeString());
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [exchangeRate]);
+
+  useEffect(() => {
+    fetchExchangeRate();
+    const exchangeRateInterval = setInterval(fetchExchangeRate, 3600000);
+    return () => clearInterval(exchangeRateInterval);
+  }, [fetchExchangeRate]);
+
+  useEffect(() => {
+    if (exchangeRate) {
+      fetchPrices();
+      const priceInterval = setInterval(fetchPrices, 5000);
+      return () => clearInterval(priceInterval);
+    }
+  }, [exchangeRate, fetchPrices]);
+
+  const handleRefresh = useCallback(() => {
+    setLoading(true);
+    fetchPrices();
+  }, [fetchPrices]);
+
+  const filteredPrices = useMemo(() => {
+    return prices.filter(price => {
+      if (activeTab === 'all') return true;
+      if (activeTab === 'positive') return parseFloat(price.premium) > 0;
+      if (activeTab === 'negative') return parseFloat(price.premium) < 0;
+      return true;
+    });
+  }, [prices, activeTab]);
 
   return (
     <>
-      {/* Head 컴포넌트를 추가하여 SEO 태그 작성 */}
       <Head>
         <title>김치프리미엄 실시간 확인 - KimpCoin</title>
         <meta
           name="description"
           content="실시간으로 김치프리미엄 데이터를 확인하세요! 암호화폐 가격 차이 정보를 한눈에 볼 수 있습니다."
         />
-        <meta name="keywords" content="김치프리미엄, 암호화폐 가격 비교, 비트코인, 이더리움, 암호화폐, 실시간 김치프리미엄, 차익거래, Bitcoin Premium, 암호화폐 프리미엄, 암호화폐 시세, 암호화폐 차익거래, BTC 프리미엄, 비트코인 프리미엄, 한국 비트코인 시세, 암호화폐 차이, 코인 시세 비교, 한국 거래소 프리미엄, Binance 가격, 업비트 가격, 암호화폐 환율, 비트코인 김프, 암호화폐 김프" />
+        <meta name="keywords" content="김치프리미엄, 암호화폐 가격 비교, 비트코인, 이더리움, 암호화폐, 실시간 김치프리미엄, 차익거래" />
         <meta name="author" content="KimpCoin Team" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
-      <main className="min-h-screen p-2 bg-gray-50">
+      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         {isMobile ? (
           <MobileView
-            prices={prices}
+            prices={filteredPrices}
             loading={loading}
             lastUpdate={lastUpdate}
             exchangeRate={exchangeRate}
-            coins={COINS}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            handleRefresh={handleRefresh}
           />
         ) : (
           <PCView
-            prices={prices}
+            prices={filteredPrices}
             loading={loading}
             lastUpdate={lastUpdate}
             exchangeRate={exchangeRate}
-            coins={COINS}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            handleRefresh={handleRefresh}
           />
         )}
       </main>
@@ -157,197 +173,302 @@ export default function Home() {
   );
 }
 
-
-function PCView({ prices, loading, lastUpdate, exchangeRate, coins }) {
+function PCView({ prices, loading, lastUpdate, exchangeRate, activeTab, setActiveTab, handleRefresh }) {
   return (
-    <main className="min-h-screen p-4 bg-gray-50">
-      <div className="max-w-[1920px] mx-auto flex space-x-4">
+    <div className="max-w-[1920px] mx-auto p-6">
+      <div className="flex flex-col lg:flex-row lg:space-x-6">
         <div className="flex-1">
-          <div className="mb-6 flex justify-between items-center">
-            <div>
-              <h1 className="flex flex-col items-start space-y-4">
-                <a
-                  href="https://accounts.binance.com/register?ref=X4CHQFBV" // 이동할 URL을 설정
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-4"
-                >
-  
-                </a>
-              </h1>
-              <h1 className="text-2xl font-bold text-gray-900 mt-4">
-                <a
-        
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center"
-                >
-
-                  <img
-                    src="/images/kimchi-icon.png"
-                    alt="김치프리미엄 아이콘"
-                    className="w-20 h-20 ml-1 rounded-3xl shadow-md"
-                  />
-                  <span className="ml-2">실시간 김치프리미엄</span>
-                </a>
-              </h1>
-              {/* <h1 className="text-2xl font-bold text-gray-900 mt-4">실시간 김치프리미엄</h1> */}
-              {/* <img
-      src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fkimchi_icon.webp?alt=media&token=fa23b1a6-413e-4289-bb19-4bdf3f9e4df2"
-      alt="김치프리미엄 아이콘"
-      className="w-6 h-6"
-    /> */}
-              <p className="text-sm text-gray-500">현재 환율: {exchangeRate ? `${exchangeRate.toFixed(2)}원/USD` : '불러오는 중...'}</p>
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <img
+                  src="/images/kimchi-icon.png"
+                  alt="김치프리미엄 아이콘"
+                  className="w-16 h-16 rounded-full shadow-lg"
+                />
+                <div>
+                  <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+                    실시간 김치프리미엄
+                  </h1>
+                  <div className="flex items-center mt-1 text-sm text-gray-600 dark:text-gray-300">
+                    <span>현재 환율: {exchangeRate ? `${exchangeRate.toFixed(2)}원/USD` : '불러오는 중...'}</span>
+                    <span className="mx-2">•</span>
+                    <span>마지막 업데이트: {lastUpdate || '불러오는 중...'}</span>
+                    <button 
+                      onClick={handleRefresh} 
+                      className="ml-2 text-blue-500 hover:text-blue-700 transition-colors"
+                      disabled={loading}
+                    >
+                      <RefreshCw size={16} className={`${loading ? 'animate-spin' : ''}`} />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            {/* <div className="text-sm text-gray-500">마지막 업데이트: {lastUpdate}</div> */}
+            
+            <div className="flex space-x-2 mt-6 mb-4">
+              <button 
+                onClick={() => setActiveTab('all')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  activeTab === 'all' 
+                    ? 'bg-blue-600 text-white shadow-md' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                전체 코인
+              </button>
+              <button 
+                onClick={() => setActiveTab('positive')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  activeTab === 'positive' 
+                    ? 'bg-green-600 text-white shadow-md' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                양수 프리미엄
+              </button>
+              <button 
+                onClick={() => setActiveTab('negative')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  activeTab === 'negative' 
+                    ? 'bg-red-600 text-white shadow-md' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                음수 프리미엄
+              </button>
+            </div>
           </div>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
 
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">코인</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Binance($)</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Upbit(₩)</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">등락(%)</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">거래량(억)</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">김치프리미엄</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {coins.map((coin) => {
-                  const priceData = prices.find((price) => price.symbol === coin.symbol) || {};
-                  return (
-                    <tr key={coin.symbol} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium">{coin.symbol}</div>
-                        <div className="text-sm text-gray-500">{coin.korName}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        {priceData.binancePrice ? `$${priceData.binancePrice}` : '불러오는 중...'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        {priceData.upbitPrice ? `₩${priceData.upbitPrice}` : '불러오는 중...'}
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-right ${parseFloat(priceData.change || 0) >= 0 ? 'text-green-500' : 'text-red-500'
-                        }`}>
-                        {priceData.change ? `${priceData.change}%` : 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        {priceData.volume ? priceData.volume : 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-blue-500">{priceData.premium ? `${priceData.premium}%` : 'N/A'}</div>
-                        <div className="text-sm text-blue-500">{priceData.priceDifference ? `₩${priceData.priceDifference}` : 'N/A'}</div>
-                      </td>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+            {loading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-pulse flex space-x-4">
+                  <div className="flex-1 space-y-4 py-1">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-200 rounded"></div>
+                      <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">코인</th>
+                      <th scope="col" className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Binance($)</th>
+                      <th scope="col" className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Upbit(₩)</th>
+                      <th scope="col" className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">등락(%)</th>
+                      <th scope="col" className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">거래량(억)</th>
+                      <th scope="col" className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">김치프리미엄</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div className="w-[400px]">
-          <div className="sticky top-4">
-            <Chat />
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {prices.map((priceData) => (
+                      <tr key={priceData.symbol} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                              <span className="text-lg font-semibold">{priceData.symbol.charAt(0)}</span>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900 dark:text-white">{priceData.symbol}</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">{priceData.korName}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white">
+                          ${priceData.binancePrice}
+                          <div className="text-xs text-gray-500 dark:text-gray-400">≈ ₩{priceData.binanceKrwPrice}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white">
+                          ₩{priceData.upbitPrice}
+                          <div className="text-xs text-gray-500 dark:text-gray-400">≈ ${priceData.upbitPriceUsd}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <div className={`text-sm font-semibold flex items-center justify-end ${
+                            parseFloat(priceData.change) >= 0 
+                              ? 'text-green-600 dark:text-green-400' 
+                              : 'text-red-600 dark:text-red-400'
+                          }`}>
+                            {parseFloat(priceData.change) >= 0 ? (
+                              <ArrowUp size={16} className="mr-1" />
+                            ) : (
+                              <ArrowDown size={16} className="mr-1" />
+                            )}
+                            {Math.abs(parseFloat(priceData.change))}%
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white">
+                          {priceData.volume}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <div className={`text-sm font-semibold ${
+                            parseFloat(priceData.premium) >= 0 
+                              ? 'text-blue-600 dark:text-blue-400' 
+                              : 'text-purple-600 dark:text-purple-400'
+                          }`}>
+                            {priceData.premium}%
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            ₩{priceData.priceDifference}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 
-function MobileView({ prices, loading, lastUpdate, exchangeRate, coins }) {
+function MobileView({ prices, loading, lastUpdate, exchangeRate, activeTab, setActiveTab, handleRefresh }) {
   return (
-    <main className="min-h-screen p-2 bg-gray-50">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-2 flex justify-between items-center">
+    <div className="p-4">
+      <div className="mb-4">
+        <div className="flex items-center space-x-3">
+          <img
+            src="/images/kimchi-icon.png"
+            alt="김치프리미엄 아이콘"
+            className="w-12 h-12 rounded-full shadow-lg"
+          />
           <div>
-            <h1 className="flex flex-col items-start space-y-4">
-              <a
-                href="https://accounts.binance.com/register?ref=X4CHQFBV" // 이동할 URL을 설정
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-4"
-              >
-                <img
-                  src="https://firebasestorage.googleapis.com/v0/b/innovapic.appspot.com/o/Innovapic_my_ai_created_img%2Fbinace-pee2.png?alt=media&token=0728f69d-1631-4fb7-bf9e-67ef4fd96291"
-                  alt="김치프리미엄 이미지"
-                  className="w-400 h-auto"
-                />
-              </a>
+            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+              실시간 김치프리미엄
             </h1>
-            <h1 className="text-2xl font-bold text-gray-900 mt-4">
-                <a
-                  href="https://console.firebase.google.com/u/0/project/innovapic/storage/innovapic.appspot.com/files/~2FInnovapic_my_ai_created_img?hl=ko"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center"
-                >
-
-                  <img
-                    src="/images/kimchi-icon.png"
-                    alt="김치프리미엄 아이콘"
-                    className="w-20 h-20 ml-1 rounded-3xl shadow-md"
-                  />
-                  <span className="ml-2">실시간 김치프리미엄</span>
-                </a>
-              </h1>
-            {/* <h1 className="text-2xl font-bold text-gray-900 mt-4">실시간 김치프리미엄</h1> */}
-
-            {/* <h1 className="text-lg font-bold text-gray-900">실시간 김치프리미엄</h1> */}
-            <p className="text-xs text-gray-500">환율: {exchangeRate ? `${exchangeRate.toFixed(2)}원/USD` : '불러오는 중...'}</p>
+            <div className="text-xs text-gray-600 dark:text-gray-300">
+              <span>환율: {exchangeRate ? `${exchangeRate.toFixed(2)}원/USD` : '불러오는 중...'}</span>
+              <button 
+                onClick={handleRefresh} 
+                className="ml-2 text-blue-500"
+                disabled={loading}
+              >
+                <RefreshCw size={14} className={`${loading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
           </div>
-          {/* <div className="text-xs text-gray-500">업데이트: {lastUpdate}</div> */}
         </div>
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full text-[10px]">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-1 py-2 text-left font-medium text-gray-500 whitespace-nowrap">코인</th>
-                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">Binance($)</th>
-                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">Upbit(₩)</th>
-                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">등락(%)</th>
-                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">거래량(억)</th>
-                <th className="px-1 py-2 text-right font-medium text-gray-500 whitespace-nowrap">김치프리미엄</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {coins.map((coin) => {
-                const priceData = prices.find((price) => price.symbol === coin.symbol) || {};
-                return (
-                  <tr key={coin.symbol} className="hover:bg-gray-50">
-                    <td className="px-1 py-2 whitespace-nowrap">
-                      <div className="font-medium truncate">{coin.symbol}</div>
-                      <div className="text-gray-500 truncate">{coin.korName}</div>
-                    </td>
-                    <td className="px-1 py-2 whitespace-nowrap text-right">
-                      {priceData.binancePrice ? `$${priceData.binancePrice}` : '불러오는 중...'}
-                    </td>
-                    <td className="px-1 py-2 whitespace-nowrap text-right">
-                      {priceData.upbitPrice ? `₩${priceData.upbitPrice}` : '불러오는 중...'}
-                    </td>
-                    <td className={`px-1 py-2 whitespace-nowrap text-right ${parseFloat(priceData.change || 0) >= 0 ? 'text-green-500' : 'text-red-500'
-                      }`}>
-                      {priceData.change ? `${priceData.change}%` : 'N/A'}
-                    </td>
-                    <td className="px-1 py-2 whitespace-nowrap text-right">
-                      {priceData.volume ? priceData.volume : 'N/A'}
-                    </td>
-                    <td className="px-1 py-2 whitespace-nowrap text-right">
-                      <div className="text-blue-500">{priceData.premium ? `${priceData.premium}%` : 'N/A'}</div>
-                      <div className="text-blue-500">{priceData.priceDifference ? `₩${priceData.priceDifference}` : 'N/A'}</div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-4">
-          <Chat />
+        
+        <div className="flex space-x-2 mt-4 mb-3">
+          <button 
+            onClick={() => setActiveTab('all')}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+              activeTab === 'all' 
+                ? 'bg-blue-600 text-white shadow-sm' 
+                : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
+            }`}
+          >
+            전체
+          </button>
+          <button 
+            onClick={() => setActiveTab('positive')}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+              activeTab === 'positive' 
+                ? 'bg-green-600 text-white shadow-sm' 
+                : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
+            }`}
+          >
+            양수
+          </button>
+          <button 
+            onClick={() => setActiveTab('negative')}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+              activeTab === 'negative' 
+                ? 'bg-red-600 text-white shadow-sm' 
+                : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
+            }`}
+          >
+            음수
+          </button>
         </div>
       </div>
-    </main>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+        {loading ? (
+          <div className="flex justify-center items-center h-48">
+            <div className="animate-pulse flex space-x-4">
+              <div className="flex-1 space-y-3 py-1">
+                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                <div className="space-y-1">
+                  <div className="h-3 bg-gray-200 rounded"></div>
+                  <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th scope="col" className="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">코인</th>
+                  <th scope="col" className="px-2 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Binance</th>
+                  <th scope="col" className="px-2 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Upbit</th>
+                  <th scope="col" className="px-2 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">등락</th>
+                  <th scope="col" className="px-2 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">김프</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {prices.map((priceData) => (
+                  <tr key={priceData.symbol} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-2 py-3 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-7 w-7 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-semibold">{priceData.symbol.charAt(0)}</span>
+                        </div>
+                        <div className="ml-2">
+                          <div className="text-xs font-medium text-gray-900 dark:text-white">{priceData.symbol}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">{priceData.korName}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-2 py-3 whitespace-nowrap text-right">
+                      <div className="text-xs font-medium text-gray-900 dark:text-white">${priceData.binancePrice}</div>
+                    </td>
+                    <td className="px-2 py-3 whitespace-nowrap text-right">
+                      <div className="text-xs font-medium text-gray-900 dark:text-white">₩{priceData.upbitPrice}</div>
+                    </td>
+                    <td className="px-2 py-3 whitespace-nowrap text-right">
+                      <div className={`text-xs font-medium flex items-center justify-end ${
+                        parseFloat(priceData.change) >= 0 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {parseFloat(priceData.change) >= 0 ? (
+                          <ArrowUp size={12} className="mr-1" />
+                        ) : (
+                          <ArrowDown size={12} className="mr-1" />
+                        )}
+                        {Math.abs(parseFloat(priceData.change))}%
+                      </div>
+                    </td>
+                    <td className="px-2 py-3 whitespace-nowrap text-right">
+                      <div className={`text-xs font-medium ${
+                        parseFloat(priceData.premium) >= 0 
+                          ? 'text-blue-600 dark:text-blue-400' 
+                          : 'text-purple-600 dark:text-purple-400'
+                      }`}>
+                        {priceData.premium}%
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        ₩{priceData.priceDifference}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
