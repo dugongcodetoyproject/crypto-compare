@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Head from 'next/head';
-import { ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { ArrowUpIcon, ArrowDownIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 const useMediaQuery = (width) => {
   const [targetReached, setTargetReached] = useState(false);
@@ -199,7 +199,7 @@ function PCView({ prices, loading, lastUpdate, exchangeRate, activeTab, setActiv
                       className="ml-2 text-blue-500 hover:text-blue-700 transition-colors"
                       disabled={loading}
                     >
-                      <RefreshCw size={16} className={`${loading ? 'animate-spin' : ''}`} />
+                      <ArrowPathIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                     </button>
                   </div>
                 </div>
@@ -295,9 +295,9 @@ function PCView({ prices, loading, lastUpdate, exchangeRate, activeTab, setActiv
                               : 'text-red-600 dark:text-red-400'
                           }`}>
                             {parseFloat(priceData.change) >= 0 ? (
-                              <ArrowUp size={16} className="mr-1" />
+                              <ArrowUpIcon className="w-4 h-4 mr-1" />
                             ) : (
-                              <ArrowDown size={16} className="mr-1" />
+                              <ArrowDownIcon className="w-4 h-4 mr-1" />
                             )}
                             {Math.abs(parseFloat(priceData.change))}%
                           </div>
@@ -351,7 +351,7 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate, activeTab, setA
                 className="ml-2 text-blue-500"
                 disabled={loading}
               >
-                <RefreshCw size={14} className={`${loading ? 'animate-spin' : ''}`} />
+                <ArrowPathIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
@@ -443,9 +443,9 @@ function MobileView({ prices, loading, lastUpdate, exchangeRate, activeTab, setA
                           : 'text-red-600 dark:text-red-400'
                       }`}>
                         {parseFloat(priceData.change) >= 0 ? (
-                          <ArrowUp size={12} className="mr-1" />
+                          <ArrowUpIcon className="w-4 h-4 mr-1" />
                         ) : (
-                          <ArrowDown size={12} className="mr-1" />
+                          <ArrowDownIcon className="w-4 h-4 mr-1" />
                         )}
                         {Math.abs(parseFloat(priceData.change))}%
                       </div>
