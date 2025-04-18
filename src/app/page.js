@@ -278,7 +278,7 @@ const CoinRow = ({ coin, priceData, isMobile }) => {
       </td>
       <td className={`${paddingClass} text-right`}>
         {priceData.change !== undefined ? (
-          <div className={`inline-flex items-center px-1 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          <div className={`inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl transition-all duration-300 font-medium ${
             parseFloat(priceData.change) >= 0 
               ? 'bg-green-100 text-green-800' 
               : 'bg-red-100 text-red-800'}`}>
@@ -289,13 +289,15 @@ const CoinRow = ({ coin, priceData, isMobile }) => {
         )}
       </td>
       <td className={`${paddingClass} text-right`}>
-        <div className="font-medium text-xs sm:text-base text-gray-900 whitespace-nowrap">{priceData.volume !== undefined ? `${priceData.volume}억` : '-'}</div>
+        <div className="font-medium text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl transition-all duration-300">
+          {priceData.volume !== undefined ? `${priceData.volume}억` : '-'}
+        </div>
       </td>
       <td className={`${paddingClass} text-right`}>
-        <div className="font-medium text-xs sm:text-lg text-red-600 whitespace-nowrap">
+        <div className="font-medium text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl transition-all duration-300 text-red-600">
           {priceData.premium !== undefined ? `${priceData.premium}%` : '-'}
         </div>
-        <div className={`text-xs text-red-500 whitespace-nowrap`}>
+        <div className={`${isMobile ? "text-[8px] xs:text-[10px] sm:text-xs" : "text-[10px] xs:text-xs sm:text-sm"} text-red-500 transition-all duration-300`}>
           {priceData.priceDifference ? `₩${priceData.priceDifference}` : '-'}
         </div>
       </td>
