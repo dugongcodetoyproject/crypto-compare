@@ -238,7 +238,9 @@ const LoadingSpinner = () => (
 
 // 코인 테이블 Row 컴포넌트
 const CoinRow = ({ coin, priceData, isMobile }) => {
-  const paddingClass = isMobile ? "px-1 py-2" : "px-4 sm:px-6 py-4";
+  const paddingClass = isMobile 
+    ? "px-1 py-1 xs:px-2 xs:py-2 sm:px-3 sm:py-3" 
+    : "px-2 py-2 sm:px-4 sm:py-4 md:px-6 md:py-4 lg:px-8 lg:py-6";
   
   // JSDelivr CDN의 cryptocurrency-icons 패키지 사용
   const iconUrl = `https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/${coin.symbol.toLowerCase()}.png`;
@@ -247,22 +249,21 @@ const CoinRow = ({ coin, priceData, isMobile }) => {
     <tr className="hover:bg-blue-50 transition-colors border-b border-gray-100">
       <td className={`${paddingClass}`}>
         <div className="flex items-center">
-          <div className="flex-shrink-0 h-6 w-6 sm:h-10 sm:w-10 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+          <div className="flex-shrink-0 h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 md:h-10 md:w-10 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
             <img 
               src={iconUrl} 
               alt={coin.symbol}
-              className="h-4 w-4 sm:h-6 sm:w-6"
+              className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6 md:h-7 md:w-7"
               onError={(e) => {
-                // 이미지 로드 실패 시 코인 심볼 텍스트로 대체
                 e.target.onerror = null;
                 e.target.style.display = 'none';
-                e.target.parentNode.innerHTML = `<span class="font-bold text-xs text-gray-700">${coin.symbol}</span>`;
+                e.target.parentNode.innerHTML = `<span class="font-bold text-[8px] xs:text-[10px] sm:text-xs md:text-sm text-gray-700">${coin.symbol}</span>`;
               }}
             />
           </div>
-          <div className="ml-1 sm:ml-3">
-            <div className="font-medium text-xs sm:text-base text-gray-900 truncate max-w-[60px] sm:max-w-full">{coin.symbol}</div>
-            {!isMobile && <div className="text-sm text-gray-500">{coin.korName}</div>}
+          <div className="ml-1 xs:ml-2 sm:ml-3">
+            <div className="font-medium text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-900">{coin.symbol}</div>
+            <div className={`${isMobile ? "text-[8px] xs:text-[10px] sm:text-xs" : "text-[10px] xs:text-xs sm:text-sm"} text-gray-500`}>{coin.korName}</div>
           </div>
         </div>
       </td>
@@ -307,24 +308,19 @@ const CoinRow = ({ coin, priceData, isMobile }) => {
 
 // 코인 테이블 헤더 컴포넌트
 const TableHeader = ({ isMobile }) => {
-  const textSizeClass = isMobile ? "text-xs" : "text-sm";
-  const paddingClass = isMobile ? "px-1 py-2" : "px-4 sm:px-6 py-4";
+  const paddingClass = isMobile 
+    ? "px-1 py-1 xs:px-2 xs:py-2 sm:px-3 sm:py-3" 
+    : "px-2 py-2 sm:px-4 sm:py-4 md:px-6 md:py-4 lg:px-8 lg:py-6";
   
   return (
     <thead className="bg-gray-50">
       <tr>
-        <th className={`${paddingClass} text-left ${textSizeClass} font-semibold text-gray-600 tracking-wider rounded-tl-lg w-[80px] sm:w-auto`}>코인</th>
-        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider w-[70px] sm:w-auto`}>
-          <span className="whitespace-nowrap">Binance</span>
-        </th>
-        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider w-[70px] sm:w-auto`}>
-          <span className="whitespace-nowrap">Upbit</span>
-        </th>
-        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider w-[50px] sm:w-auto`}>등락</th>
-        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider w-[50px] sm:w-auto`}>거래량</th>
-        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider rounded-tr-lg w-[80px] sm:w-auto`}>
-          <span className="whitespace-nowrap">김치프리미엄</span>
-        </th>
+        <th className={`${paddingClass} text-left text-[10px] xs:text-xs sm:text-sm md:text-base font-semibold text-gray-600 tracking-wider rounded-tl-lg`}>코인</th>
+        <th className={`${paddingClass} text-right text-[10px] xs:text-xs sm:text-sm md:text-base font-semibold text-gray-600 tracking-wider`}>Binance($)</th>
+        <th className={`${paddingClass} text-right text-[10px] xs:text-xs sm:text-sm md:text-base font-semibold text-gray-600 tracking-wider`}>Upbit(₩)</th>
+        <th className={`${paddingClass} text-right text-[10px] xs:text-xs sm:text-sm md:text-base font-semibold text-gray-600 tracking-wider`}>등락(%)</th>
+        <th className={`${paddingClass} text-right text-[10px] xs:text-xs sm:text-sm md:text-base font-semibold text-gray-600 tracking-wider`}>거래량(억)</th>
+        <th className={`${paddingClass} text-right text-[10px] xs:text-xs sm:text-sm md:text-base font-semibold text-gray-600 tracking-wider rounded-tr-lg`}>김치프리미엄</th>
       </tr>
     </thead>
   );
@@ -333,8 +329,8 @@ const TableHeader = ({ isMobile }) => {
 // 코인 테이블 컴포넌트
 const CoinTable = ({ prices, coins, isMobile, loadingSecondary }) => (
   <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-    <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-      <table className="w-full divide-y divide-gray-200 table-fixed sm:table-auto">
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
         <TableHeader isMobile={isMobile} />
         <tbody className="bg-white divide-y divide-gray-100">
           {coins.map((coin) => {
