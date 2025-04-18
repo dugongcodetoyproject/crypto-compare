@@ -45,14 +45,53 @@ const ALL_COINS = [...MAIN_COINS, ...SECONDARY_COINS];
 // SEO 컴포넌트
 const SEO = () => (
   <Head>
-    <title>김치프리미엄 실시간 확인 - KimpCoin</title>
+    <title>실시간 김치프리미엄 | 김프 | 암호화폐 가격 비교</title>
     <meta
       name="description"
-      content="실시간으로 김치프리미엄 데이터를 확인하세요! 암호화폐 가격 차이 정보를 한눈에 볼 수 있습니다."
+      content="실시간 김치프리미엄(김프) 데이터를 확인하세요! 한국과 글로벌 암호화폐 시장의 가격 차이를 한눈에 볼 수 있습니다. 비트코인, 이더리움 등 주요 코인의 김치프리미엄을 실시간으로 확인하세요."
     />
-    <meta name="keywords" content="김치프리미엄, 암호화폐 가격 비교, 비트코인, 이더리움, 암호화폐, 실시간 김치프리미엄, 차익거래" />
+    <meta name="keywords" content="김치프리미엄, 김프, 암호화폐 가격 비교, 비트코인, 이더리움, 암호화폐, 실시간 김치프리미엄, 차익거래, 암호화폐 시세, 코인 가격" />
     <meta name="author" content="KimpCoin Team" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    {/* Open Graph / Facebook */}
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://kimpcoin.com/" />
+    <meta property="og:title" content="실시간 김치프리미엄 | 김프 | 암호화폐 가격 비교" />
+    <meta property="og:description" content="실시간 김치프리미엄(김프) 데이터를 확인하세요! 한국과 글로벌 암호화폐 시장의 가격 차이를 한눈에 볼 수 있습니다." />
+    <meta property="og:image" content="https://kimpcoin.com/images/kimchi-icon.png" />
+
+    {/* Twitter */}
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://kimpcoin.com/" />
+    <meta property="twitter:title" content="실시간 김치프리미엄 | 김프 | 암호화폐 가격 비교" />
+    <meta property="twitter:description" content="실시간 김치프리미엄(김프) 데이터를 확인하세요! 한국과 글로벌 암호화폐 시장의 가격 차이를 한눈에 볼 수 있습니다." />
+    <meta property="twitter:image" content="https://kimpcoin.com/images/kimchi-icon.png" />
+
+    {/* 추가 메타 태그 */}
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="revisit-after" content="1 days" />
+    <meta name="language" content="Korean" />
+    <meta name="generator" content="Next.js" />
+    
+    {/* 구조화된 데이터 (Schema.org) */}
+    <script type="application/ld+json">
+      {JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "실시간 김치프리미엄",
+        "description": "실시간 김치프리미엄(김프) 데이터를 확인하세요! 한국과 글로벌 암호화폐 시장의 가격 차이를 한눈에 볼 수 있습니다.",
+        "url": "https://kimpcoin.com/",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      })}
+    </script>
   </Head>
 );
 
