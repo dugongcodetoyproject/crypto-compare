@@ -267,12 +267,12 @@ const CoinRow = ({ coin, priceData, isMobile }) => {
         </div>
       </td>
       <td className={`${paddingClass} text-right`}>
-        <div className="font-mono font-medium text-xs sm:text-base whitespace-nowrap">
+        <div className="font-mono font-medium text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl transition-all duration-300">
           {priceData.binancePrice ? `$${priceData.binancePrice}` : '-'}
         </div>
       </td>
       <td className={`${paddingClass} text-right`}>
-        <div className="font-mono font-medium text-xs sm:text-base whitespace-nowrap">
+        <div className="font-mono font-medium text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl transition-all duration-300">
           {priceData.upbitPrice ? `₩${priceData.upbitPrice}` : '-'}
         </div>
       </td>
