@@ -56,135 +56,148 @@ const SEO = () => (
   </Head>
 );
 
-// 개선된 헤더 스타일
-const improvedHeaderStyles = `
-  .header-container {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background-image: linear-gradient(to right, #3b82f6, #4f46e5);
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    padding: 1rem;
-    color: white;
-  }
-
-  .header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-  }
-
-  .logo-container {
-    display: flex;
-    align-items: center;
-  }
-
-  .logo-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 9999px;
-    border: 3px solid white;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-  }
-
-  .header-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-left: 0.75rem;
-  }
-
-  .header-subtitle {
-    font-size: 0.75rem;
-    color: white;
-    max-width: 100%;
-    margin-top: 0.25rem;
-  }
-
-  .exchange-rate-container {
-    background-color: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    text-align: right;
-  }
-
-  .rate-label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: #ef4444;
-  }
-
-  .rate-value {
-    font-size: 1.125rem;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-
-  .update-time {
-    font-size: 0.7rem;
-    opacity: 0.8;
-    margin-top: 0.25rem;
-  }
-
-  @media (min-width: 640px) {
-    .header-container {
-      padding: 1.25rem;
-    }
-    
-    .header-title {
-      font-size: 1.5rem;
-    }
-    
-    .header-subtitle {
-      font-size: 0.875rem;
-    }
-    
-    .logo-icon {
-      width: 3rem;
-      height: 3rem;
-    }
-  }
-
-  @media (min-width: 768px) {
-    .header-container {
-      flex-direction: row;
-      padding: 1.5rem;
-    }
-    
-    .header-content {
-      flex: 1;
-    }
-    
-    .exchange-rate-container {
-      margin-left: 1.5rem;
-      min-width: 180px;
-      align-self: center;
-    }
-    
-    .header-top {
-      margin-bottom: 0;
-    }
-    
-    .header-title {
-      font-size: 1.75rem;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .header-subtitle {
-      max-width: 240px;
-    }
-  }
-`;
-
 // 개선된 헤더 컴포넌트
 const Header = ({ exchangeRate, lastUpdate }) => {
   return (
     <>
-      <style jsx>{improvedHeaderStyles}</style>
+      <style jsx>{`
+        .header-container {
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background-image: linear-gradient(to right, #3b82f6, #4f46e5);
+          border-radius: 0.5rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          padding: 0.75rem;
+          color: white;
+        }
+      
+        .header-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.5rem;
+        }
+      
+        .logo-container {
+          display: flex;
+          align-items: center;
+        }
+      
+        .logo-icon {
+          width: 2rem;
+          height: 2rem;
+          border-radius: 9999px;
+          border: 2px solid white;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+        }
+      
+        .header-title {
+          font-size: 1rem;
+          font-weight: 700;
+          margin-left: 0.5rem;
+          white-space: nowrap;
+        }
+      
+        .header-subtitle {
+          font-size: 0.7rem;
+          color: white;
+          max-width: 100%;
+          margin-top: 0.25rem;
+        }
+      
+        .exchange-rate-container {
+          background-color: rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(4px);
+          border-radius: 0.5rem;
+          padding: 0.5rem 0.75rem;
+          text-align: right;
+          margin-top: 0.5rem;
+        }
+      
+        .rate-label {
+          font-size: 0.7rem;
+          font-weight: 500;
+          color: #ef4444;
+        }
+      
+        .rate-value {
+          font-size: 1rem;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+      
+        .update-time {
+          font-size: 0.65rem;
+          opacity: 0.8;
+          margin-top: 0.25rem;
+        }
+      
+        @media (min-width: 640px) {
+          .header-container {
+            padding: 1.25rem;
+          }
+          
+          .header-title {
+            font-size: 1.5rem;
+          }
+          
+          .header-subtitle {
+            font-size: 0.875rem;
+          }
+          
+          .logo-icon {
+            width: 3rem;
+            height: 3rem;
+          }
+          
+          .exchange-rate-container {
+            padding: 0.75rem 1rem;
+            margin-top: 0;
+          }
+          
+          .rate-label {
+            font-size: 0.75rem;
+          }
+          
+          .rate-value {
+            font-size: 1.125rem;
+          }
+        }
+      
+        @media (min-width: 768px) {
+          .header-container {
+            flex-direction: row;
+            padding: 1.5rem;
+          }
+          
+          .header-content {
+            flex: 1;
+          }
+          
+          .exchange-rate-container {
+            margin-left: 1.5rem;
+            min-width: 180px;
+            align-self: center;
+            margin-top: 0;
+          }
+          
+          .header-top {
+            margin-bottom: 0;
+          }
+          
+          .header-title {
+            font-size: 1.75rem;
+          }
+        }
+      
+        @media (max-width: 480px) {
+          .header-subtitle {
+            max-width: 200px;
+          }
+        }
+      `}</style>
       <div className="header-container">
         <div className="header-content">
           <div className="header-top">
@@ -198,10 +211,8 @@ const Header = ({ exchangeRate, lastUpdate }) => {
             </div>
           </div>
           <p className="header-subtitle text-white">
-            한국과 글로벌 암호화폐 시장의 <br/>
-            가격 차이를 확인하세요
+            한국과 글로벌 암호화폐 시장의 가격 차이
           </p>
-          <div style={{ height: '16px' }} />
         </div>
         <div className="exchange-rate-container">
           <div className="rate-label">현재 환율</div>
@@ -227,7 +238,7 @@ const LoadingSpinner = () => (
 
 // 코인 테이블 Row 컴포넌트
 const CoinRow = ({ coin, priceData, isMobile }) => {
-  const paddingClass = isMobile ? "px-2 py-2 sm:py-3" : "px-4 sm:px-6 py-4";
+  const paddingClass = isMobile ? "px-1 py-2" : "px-4 sm:px-6 py-4";
   
   // JSDelivr CDN의 cryptocurrency-icons 패키지 사용
   const iconUrl = `https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/${coin.symbol.toLowerCase()}.png`;
@@ -236,38 +247,38 @@ const CoinRow = ({ coin, priceData, isMobile }) => {
     <tr className="hover:bg-blue-50 transition-colors border-b border-gray-100">
       <td className={`${paddingClass}`}>
         <div className="flex items-center">
-          <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+          <div className="flex-shrink-0 h-6 w-6 sm:h-10 sm:w-10 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
             <img 
               src={iconUrl} 
               alt={coin.symbol}
-              className="h-5 w-5 sm:h-6 sm:w-6"
+              className="h-4 w-4 sm:h-6 sm:w-6"
               onError={(e) => {
                 // 이미지 로드 실패 시 코인 심볼 텍스트로 대체
                 e.target.onerror = null;
                 e.target.style.display = 'none';
-                e.target.parentNode.innerHTML = `<span class="font-bold text-xs sm:text-sm text-gray-700">${coin.symbol}</span>`;
+                e.target.parentNode.innerHTML = `<span class="font-bold text-xs text-gray-700">${coin.symbol}</span>`;
               }}
             />
           </div>
-          <div className="ml-2 sm:ml-3">
-            <div className="font-medium text-sm sm:text-base text-gray-900">{coin.symbol}</div>
-            <div className={`${isMobile ? "text-xs" : "text-sm"} text-gray-500`}>{coin.korName}</div>
+          <div className="ml-1 sm:ml-3">
+            <div className="font-medium text-xs sm:text-base text-gray-900 truncate max-w-[60px] sm:max-w-full">{coin.symbol}</div>
+            {!isMobile && <div className="text-sm text-gray-500">{coin.korName}</div>}
           </div>
         </div>
       </td>
       <td className={`${paddingClass} text-right`}>
-        <div className="font-mono font-medium text-sm sm:text-base">
+        <div className="font-mono font-medium text-xs sm:text-base whitespace-nowrap">
           {priceData.binancePrice ? `$${priceData.binancePrice}` : '-'}
         </div>
       </td>
       <td className={`${paddingClass} text-right`}>
-        <div className="font-mono font-medium text-sm sm:text-base">
+        <div className="font-mono font-medium text-xs sm:text-base whitespace-nowrap">
           {priceData.upbitPrice ? `₩${priceData.upbitPrice}` : '-'}
         </div>
       </td>
       <td className={`${paddingClass} text-right`}>
         {priceData.change !== undefined ? (
-          <div className={`inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          <div className={`inline-flex items-center px-1 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${
             parseFloat(priceData.change) >= 0 
               ? 'bg-green-100 text-green-800' 
               : 'bg-red-100 text-red-800'}`}>
@@ -278,13 +289,13 @@ const CoinRow = ({ coin, priceData, isMobile }) => {
         )}
       </td>
       <td className={`${paddingClass} text-right`}>
-        <div className="font-medium text-sm sm:text-base text-gray-900">{priceData.volume !== undefined ? `${priceData.volume}억` : '-'}</div>
+        <div className="font-medium text-xs sm:text-base text-gray-900 whitespace-nowrap">{priceData.volume !== undefined ? `${priceData.volume}억` : '-'}</div>
       </td>
       <td className={`${paddingClass} text-right`}>
-        <div className="font-medium text-base sm:text-lg text-red-600">
+        <div className="font-medium text-xs sm:text-lg text-red-600 whitespace-nowrap">
           {priceData.premium !== undefined ? `${priceData.premium}%` : '-'}
         </div>
-        <div className={`${isMobile ? "text-xs" : "text-sm"} text-red-500`}>
+        <div className={`text-xs text-red-500 whitespace-nowrap`}>
           {priceData.priceDifference ? `₩${priceData.priceDifference}` : '-'}
         </div>
       </td>
@@ -295,17 +306,23 @@ const CoinRow = ({ coin, priceData, isMobile }) => {
 // 코인 테이블 헤더 컴포넌트
 const TableHeader = ({ isMobile }) => {
   const textSizeClass = isMobile ? "text-xs" : "text-sm";
-  const paddingClass = isMobile ? "px-2 py-2 sm:py-3" : "px-4 sm:px-6 py-4";
+  const paddingClass = isMobile ? "px-1 py-2" : "px-4 sm:px-6 py-4";
   
   return (
     <thead className="bg-gray-50">
       <tr>
-        <th className={`${paddingClass} text-left ${textSizeClass} font-semibold text-gray-600 tracking-wider rounded-tl-lg`}>코인</th>
-        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider`}>Binance($)</th>
-        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider`}>Upbit(₩)</th>
-        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider`}>등락(%)</th>
-        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider`}>거래량(억)</th>
-        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider rounded-tr-lg`}>김치프리미엄</th>
+        <th className={`${paddingClass} text-left ${textSizeClass} font-semibold text-gray-600 tracking-wider rounded-tl-lg w-[80px] sm:w-auto`}>코인</th>
+        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider w-[70px] sm:w-auto`}>
+          <span className="whitespace-nowrap">Binance</span>
+        </th>
+        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider w-[70px] sm:w-auto`}>
+          <span className="whitespace-nowrap">Upbit</span>
+        </th>
+        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider w-[50px] sm:w-auto`}>등락</th>
+        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider w-[50px] sm:w-auto`}>거래량</th>
+        <th className={`${paddingClass} text-right ${textSizeClass} font-semibold text-gray-600 tracking-wider rounded-tr-lg w-[80px] sm:w-auto`}>
+          <span className="whitespace-nowrap">김치프리미엄</span>
+        </th>
       </tr>
     </thead>
   );
@@ -314,8 +331,8 @@ const TableHeader = ({ isMobile }) => {
 // 코인 테이블 컴포넌트
 const CoinTable = ({ prices, coins, isMobile, loadingSecondary }) => (
   <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
+    <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <table className="w-full divide-y divide-gray-200 table-fixed sm:table-auto">
         <TableHeader isMobile={isMobile} />
         <tbody className="bg-white divide-y divide-gray-100">
           {coins.map((coin) => {
@@ -344,22 +361,22 @@ const StatsSummary = ({ prices }) => {
     : null;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
-      <div className="bg-white rounded-lg shadow-md p-3 md:p-4 border-l-4 border-blue-500">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 mb-3 md:mb-6">
+      <div className="bg-white rounded-lg shadow-md p-2 md:p-4 border-l-4 border-blue-500">
         <div className="text-xs sm:text-sm font-medium text-gray-500">평균 김치프리미엄</div>
-        <div className="mt-1 text-xl md:text-2xl font-bold text-gray-900">{avgPremium}%</div>
+        <div className="mt-1 text-lg md:text-2xl font-bold text-gray-900">{avgPremium}%</div>
       </div>
       
-      <div className="bg-white rounded-lg shadow-md p-3 md:p-4 border-l-4 border-green-500">
+      <div className="bg-white rounded-lg shadow-md p-2 md:p-4 border-l-4 border-green-500">
         <div className="text-xs sm:text-sm font-medium text-gray-500">최대 프리미엄 코인</div>
-        <div className="mt-1 text-xl md:text-2xl font-bold text-gray-900">
+        <div className="mt-1 text-lg md:text-2xl font-bold text-gray-900 truncate">
           {maxPremiumCoin ? `${maxPremiumCoin.symbol} (${maxPremiumCoin.premium}%)` : '-'}
         </div>
       </div>
       
-      <div className="bg-white rounded-lg shadow-md p-3 md:p-4 border-l-4 border-purple-500 sm:col-span-2 md:col-span-1">
+      <div className="bg-white rounded-lg shadow-md p-2 md:p-4 border-l-4 border-purple-500 sm:col-span-2 md:col-span-1">
         <div className="text-xs sm:text-sm font-medium text-gray-500">추적 중인 코인</div>
-        <div className="mt-1 text-xl md:text-2xl font-bold text-gray-900">{ALL_COINS.length}개</div>
+        <div className="mt-1 text-lg md:text-2xl font-bold text-gray-900">{ALL_COINS.length}개</div>
       </div>
     </div>
   );
@@ -395,10 +412,10 @@ const PCView = ({ prices, exchangeRate, loadingSecondary, lastUpdate }) => {
 // 모바일 뷰 컴포넌트
 const MobileView = ({ prices, exchangeRate, loadingSecondary, lastUpdate }) => {
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="w-full mx-auto px-1">
       <Header exchangeRate={exchangeRate} lastUpdate={lastUpdate} />
       
-      <div className="mt-4">
+      <div className="mt-3">
         <StatsSummary prices={prices} />
         
         <CoinTable 
@@ -408,7 +425,7 @@ const MobileView = ({ prices, exchangeRate, loadingSecondary, lastUpdate }) => {
           loadingSecondary={loadingSecondary}
         />
         
-        <div className="mt-6">
+        <div className="mt-4">
           <Chat />
         </div>
       </div>
@@ -420,7 +437,7 @@ const MobileView = ({ prices, exchangeRate, loadingSecondary, lastUpdate }) => {
 export default function Home() {
   const isMobile = useMediaQuery(768);
   const [prices, setPrices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingPrimary, setLoadingPrimary] = useState(true);
   const [loadingSecondary, setLoadingSecondary] = useState(false);
   const [exchangeRate, setExchangeRate] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
@@ -450,7 +467,7 @@ export default function Home() {
               setExchangeRate(cachedExchangeRate);
             }
             
-            setLoading(false);  // 캐시 데이터로 로딩 상태 제거
+            setLoadingPrimary(false);  // 캐시 데이터로 로딩 상태 제거
             setIsDataInitialized(true);
           }
         } catch (err) {
@@ -623,11 +640,11 @@ export default function Home() {
     const initializeData = async () => {
       try {
         await fetchAllCoinsOptimized();
-        setLoading(false);
+        setLoadingPrimary(false);
         setIsDataInitialized(true);
       } catch (error) {
         console.error('Error initializing data:', error);
-        setLoading(false);
+        setLoadingPrimary(false);
       }
     };
     
@@ -675,7 +692,7 @@ export default function Home() {
     <>
       <SEO />
       <main className="min-h-screen p-2 sm:p-3 md:p-4 bg-gray-50">
-        {loading ? (
+        {loadingPrimary ? (
           <div className="flex justify-center items-center h-screen">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
