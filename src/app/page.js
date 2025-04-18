@@ -265,7 +265,7 @@ const CoinRow = ({ coin, priceData, isMobile }) => {
         </div>
       </td>
       <td className={`${paddingClass} text-right`}>
-        {priceData.change ? (
+        {priceData.change !== undefined ? (
           <div className={`inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${
             parseFloat(priceData.change) >= 0 
               ? 'bg-green-100 text-green-800' 
@@ -277,11 +277,11 @@ const CoinRow = ({ coin, priceData, isMobile }) => {
         )}
       </td>
       <td className={`${paddingClass} text-right`}>
-        <div className="font-medium text-sm sm:text-base text-gray-900">{priceData.volume ? `${priceData.volume}억` : '-'}</div>
+        <div className="font-medium text-sm sm:text-base text-gray-900">{priceData.volume !== undefined ? `${priceData.volume}억` : '-'}</div>
       </td>
       <td className={`${paddingClass} text-right`}>
         <div className="font-medium text-base sm:text-lg text-red-600">
-          {priceData.premium ? `${priceData.premium}%` : '-'}
+          {priceData.premium !== undefined ? `${priceData.premium}%` : '-'}
         </div>
         <div className={`${isMobile ? "text-xs" : "text-sm"} text-red-500`}>
           {priceData.priceDifference ? `₩${priceData.priceDifference}` : '-'}
@@ -330,14 +330,16 @@ const CoinTable = ({ prices, coins, isMobile, loadingSecondary }) => (
 
 // 통계 요약 컴포넌트
 const StatsSummary = ({ prices }) => {
+  const pricesWithPremium = prices.filter(coin => coin.premium !== undefined && !isNaN(parseFloat(coin.premium)));
+  
   // 평균 김치프리미엄 계산
-  const avgPremium = prices.length > 0 
-    ? (prices.reduce((sum, coin) => sum + parseFloat(coin.premium || 0), 0) / prices.length).toFixed(2)
+  const avgPremium = pricesWithPremium.length > 0 
+    ? (pricesWithPremium.reduce((sum, coin) => sum + parseFloat(coin.premium || 0), 0) / pricesWithPremium.length).toFixed(2)
     : '-';
   
   // 최대 김치프리미엄 코인 찾기
-  const maxPremiumCoin = prices.length > 0
-    ? prices.reduce((max, coin) => parseFloat(coin.premium || 0) > parseFloat(max.premium || 0) ? coin : max, prices[0])
+  const maxPremiumCoin = pricesWithPremium.length > 0
+    ? pricesWithPremium.reduce((max, coin) => parseFloat(coin.premium || 0) > parseFloat(max.premium || 0) ? coin : max, pricesWithPremium[0])
     : null;
 
   return (
@@ -417,11 +419,47 @@ const MobileView = ({ prices, exchangeRate, loadingSecondary, lastUpdate }) => {
 export default function Home() {
   const isMobile = useMediaQuery(768);
   const [prices, setPrices] = useState([]);
-  const [loadingPrimary, setLoadingPrimary] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [loadingSecondary, setLoadingSecondary] = useState(false);
   const [exchangeRate, setExchangeRate] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [priceMap, setPriceMap] = useState({});  // 코인별 가격 데이터 맵
+  const [isDataInitialized, setIsDataInitialized] = useState(false);
+
+  // 캐시에서 이전 데이터 로드 (페이지 초기 로드 성능 향상) - 가장 먼저 실행
+  useEffect(() => {
+    const loadCachedData = () => {
+      const cachedData = localStorage.getItem('kimp_coin_data');
+      if (cachedData) {
+        try {
+          const { data, timestamp, cachedExchangeRate } = JSON.parse(cachedData);
+          // 30분 이내의 캐시 데이터만 사용
+          if (Date.now() - timestamp < 30 * 60 * 1000) {
+            // 캐시된 데이터를 priceMap으로 변환
+            const cachedPriceMap = {};
+            data.forEach(item => {
+              cachedPriceMap[item.symbol] = item;
+            });
+            setPriceMap(cachedPriceMap);
+            setPrices(data);
+            setLastUpdate(new Date(timestamp).toLocaleTimeString());
+            
+            // 캐시된 환율 데이터가 있으면 사용
+            if (cachedExchangeRate) {
+              setExchangeRate(cachedExchangeRate);
+            }
+            
+            setLoading(false);  // 캐시 데이터로 로딩 상태 제거
+            setIsDataInitialized(true);
+          }
+        } catch (err) {
+          console.error('Error parsing cached data:', err);
+        }
+      }
+    };
+    
+    loadCachedData();
+  }, []);
 
   // 환율 정보 가져오기
   useEffect(() => {
@@ -431,6 +469,17 @@ export default function Home() {
         const data = await response.json();
         if (data && data.success) {
           setExchangeRate(data.rate);
+          // 환율 정보 캐싱
+          try {
+            const cachedData = localStorage.getItem('kimp_coin_data');
+            if (cachedData) {
+              const parsedData = JSON.parse(cachedData);
+              parsedData.cachedExchangeRate = data.rate;
+              localStorage.setItem('kimp_coin_data', JSON.stringify(parsedData));
+            }
+          } catch (err) {
+            console.error('Error updating cache with exchange rate:', err);
+          }
         } else {
           console.error('Failed to fetch exchange rate:', data);
         }
@@ -498,11 +547,11 @@ export default function Home() {
     // 상태 업데이트
     setPriceMap(updatedPriceMap);
     
-    // priceMap을 배열로 변환하여 prices 상태 업데이트
+    // priceMap을 배열로 변환하여 반환
     return Object.values(updatedPriceMap);
   };
 
-  // 코인 데이터 가져오기 함수
+  // 코인 데이터 가져오기 함수 - 에러 처리 강화
   const fetchCoinData = async (coinList) => {
     if (!exchangeRate) return Object.values(priceMap); // 환율 없을 경우 기존 데이터 반환
     
@@ -511,6 +560,14 @@ export default function Home() {
         fetch(`https://api.upbit.com/v1/ticker?markets=${coinList.map(coin => `KRW-${coin.symbol}`).join(',')}`),
         fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${JSON.stringify(coinList.map(coin => `${coin.symbol}USDT`))}`),
       ]);
+
+      if (!upbitResponse.ok || !binanceResponse.ok) {
+        console.error('API 응답 오류:', { 
+          upbit: upbitResponse.status, 
+          binance: binanceResponse.status 
+        });
+        return Object.values(priceMap); // API 오류 시 기존 데이터 유지
+      }
 
       const [upbitData, binanceData] = await Promise.all([
         upbitResponse.json(),
@@ -530,96 +587,94 @@ export default function Home() {
     }
   };
 
-  // 주요 코인 및 보조 코인 데이터 가져오기 - 수정된 로직
-  useEffect(() => {
-    const loadAllCoins = async () => {
-      if (!exchangeRate) return;
+  // 코인 데이터를 가져오는 함수 - 최적화된 버전
+  const fetchAllCoinsOptimized = async () => {
+    if (!exchangeRate) return;
+    
+    try {
+      // 모든 코인 한번에 로드
+      const allData = await fetchCoinData(ALL_COINS);
+      setPrices(allData);
+      setLastUpdate(new Date().toLocaleTimeString());
       
-      setLoadingPrimary(true);
-      
+      // 캐시에 저장
       try {
-        // 주요 코인 먼저 로드
-        const primaryData = await fetchCoinData(MAIN_COINS);
-        setPrices(primaryData);
-        setLastUpdate(new Date().toLocaleTimeString());
-        setLoadingPrimary(false);
-        
-        // 보조 코인 로드
-        setLoadingSecondary(true);
-        const allData = await fetchCoinData(ALL_COINS);
-        setPrices(allData);
-        setLastUpdate(new Date().toLocaleTimeString());
+        localStorage.setItem('kimp_coin_data', JSON.stringify({
+          data: allData,
+          timestamp: Date.now(),
+          cachedExchangeRate: exchangeRate
+        }));
       } catch (err) {
-        console.error('Error fetching coin data:', err);
-      } finally {
-        setLoadingPrimary(false);
-        setLoadingSecondary(false);
+        console.error('Error saving data to cache:', err);
+      }
+      
+      return allData;
+    } catch (err) {
+      console.error('Error fetching all coin data:', err);
+      return null;
+    }
+  };
+
+  // 주요 코인 데이터 초기 로드
+  useEffect(() => {
+    if (isDataInitialized || !exchangeRate) return;
+    
+    const initializeData = async () => {
+      try {
+        await fetchAllCoinsOptimized();
+        setLoading(false);
+        setIsDataInitialized(true);
+      } catch (error) {
+        console.error('Error initializing data:', error);
+        setLoading(false);
       }
     };
+    
+    initializeData();
+  }, [exchangeRate, isDataInitialized]);
 
-    loadAllCoins();
+  // 정기적인 데이터 업데이트
+  useEffect(() => {
+    if (!exchangeRate) return;
     
-    // 5초마다 모든 코인 데이터 업데이트
-    const interval = setInterval(async () => {
-      if (!exchangeRate) return;
-      
-      try {
-        const allData = await fetchCoinData(ALL_COINS);
-        setPrices(allData);
-        setLastUpdate(new Date().toLocaleTimeString());
-      } catch (err) {
-        console.error('Error updating coin data:', err);
+    // 페이지 포커스 상태 감지 - 백그라운드에서 불필요한 API 호출 방지
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchAllCoinsOptimized();
       }
-    }, 5000);
+    };
     
-    return () => clearInterval(interval);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // 3초마다 모든 코인 데이터 업데이트
+    const interval = setInterval(fetchAllCoinsOptimized, 3000);
+    
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [exchangeRate]);
-
-  // 캐시에서 이전 데이터 로드 (페이지 초기 로드 성능 향상)
-  useEffect(() => {
-    const loadCachedData = () => {
-      const cachedData = localStorage.getItem('kimp_coin_data');
-      if (cachedData) {
-        try {
-          const { data, timestamp } = JSON.parse(cachedData);
-          // 5분 이내의 캐시 데이터만 사용
-          if (Date.now() - timestamp < 5 * 60 * 1000) {
-            // 캐시된 데이터를 priceMap으로 변환
-            const cachedPriceMap = {};
-            data.forEach(item => {
-              cachedPriceMap[item.symbol] = item;
-            });
-            setPriceMap(cachedPriceMap);
-            setPrices(data);
-          }
-        } catch (err) {
-          console.error('Error parsing cached data:', err);
-        }
-      }
-    };
-    
-    loadCachedData();
-  }, []);
 
   // 데이터를 캐시에 저장
   useEffect(() => {
-    if (prices.length > 0) {
+    if (prices.length > 0 && exchangeRate) {
       try {
         localStorage.setItem('kimp_coin_data', JSON.stringify({
           data: prices,
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          cachedExchangeRate: exchangeRate
         }));
       } catch (err) {
         console.error('Error saving data to cache:', err);
       }
     }
-  }, [prices]);
+  }, [prices, exchangeRate]);
 
   return (
     <>
       <SEO />
       <main className="min-h-screen p-2 sm:p-3 md:p-4 bg-gray-50">
-        {loadingPrimary ? (
+        {loading ? (
           <div className="flex justify-center items-center h-screen">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
