@@ -98,7 +98,7 @@ const improvedHeaderStyles = `
 
   .header-subtitle {
     font-size: 0.75rem;
-    color: rgba(239, 68, 68, 1);
+    color: white;
     max-width: 100%;
     margin-top: 0.25rem;
   }
@@ -196,7 +196,7 @@ const Header = ({ exchangeRate, lastUpdate }) => {
               <h1 className="header-title">실시간 김치프리미엄</h1>
             </div>
           </div>
-          <p className="header-subtitle">
+          <p className="header-subtitle text-white">
             한국과 글로벌 암호화폐 시장의 <br/>
             가격 차이를 확인하세요.
           </p>
