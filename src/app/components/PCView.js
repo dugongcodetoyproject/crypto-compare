@@ -32,7 +32,7 @@ const PCView = ({ prices, loading, lastUpdate, exchangeRate, coins }) => {
                 {coin.volume}
               </div>
               <div className="w-[20%] text-right">
-                <div className="text-red-500">{coin.premium}%</div>
+                <div className="text-red-600">{coin.premium}%</div>
                 <div className="text-sm text-red-500">₩{coin.priceDifference}</div>
               </div>
             </div>
