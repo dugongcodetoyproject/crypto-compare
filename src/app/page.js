@@ -199,7 +199,7 @@ const Header = ({ exchangeRate, lastUpdate }) => {
           </div>
           <p className="header-subtitle text-white">
             한국과 글로벌 암호화폐 시장의 <br/>
-            가격 차이를 확인하세요.
+            가격 차이를 확인하세요
           </p>
           <div style={{ height: '16px' }} />
         </div>
