@@ -114,6 +114,7 @@ const improvedHeaderStyles = `
   .rate-label {
     font-size: 0.75rem;
     font-weight: 500;
+    color: #ef4444;
   }
 
   .rate-value {
