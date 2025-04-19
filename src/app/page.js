@@ -45,6 +45,8 @@ const ALL_COINS = [...MAIN_COINS, ...SECONDARY_COINS];
 // SEO 컴포넌트
 const SEO = () => (
   <Head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5510692764435204"
+     crossorigin="anonymous"></script>
     <title>실시간 김치프리미엄 | 김프 | 암호화폐 가격 비교</title>
     <meta
       name="description"
