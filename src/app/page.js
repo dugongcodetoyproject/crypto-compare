@@ -157,7 +157,7 @@ const Header = ({ exchangeRate, lastUpdate }) => {
       
         .rate-label {
           font-size: 0.875rem;
-          color: #ffffff;
+          color: #ef4444;
           margin-right: 0.5rem;
         }
       
